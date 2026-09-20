@@ -72,7 +72,6 @@ var title_menu: Control
 var title_active := false
 var wheat_total: Label
 var carrot_total: Label
-var equipment: Label
 var shop_panel: PanelContainer
 var shop_closed_for_visit := false
 var overlay: PanelContainer
@@ -417,9 +416,6 @@ func build_ui() -> void:
 	wheat_total = label_at("0",Vector2(1040,40),26,GOLD,hud)
 	crop_icon("carrot",Vector2(1110,32),Vector2(48,52),hud)
 	carrot_total = label_at("0",Vector2(1174,40),26,GOLD,hud)
-	label_at("YOUR SCYTHE",Vector2(34,587),11,MUTED,hud)
-	equipment = label_at("",Vector2(34,611),16,MINT,hud)
-	label_at("DEEP SPACE AGRICULTURE  /  EST. 2086",Vector2(930,751),10,MUTED,hud)
 
 func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
 	var icon := TextureRect.new()
@@ -646,7 +642,6 @@ func load_stage(index: int, from_right: bool = false) -> void:
 func update_ui() -> void:
 	wheat_total.text = str(harvest.w)
 	carrot_total.text = str(harvest.c)
-	equipment.text = "Break  %d / 2     Reach  +%d     Jump  %s" % [rock_break_level,reach_level,"ON" if jump_unlocked else "OFF"]
 	gate.material_override = material(MINT,0.5)
 	update_shop_markers()
 
