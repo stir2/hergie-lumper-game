@@ -40,6 +40,7 @@ var crops: Dictionary = {}
 var tiles: Dictionary = {}
 var rocks: Dictionary = {}
 var rock_nodes: Dictionary = {}
+var scenery_blockers: Dictionary = {}
 var floor_materials: Dictionary = {}
 var tile_nodes: Dictionary = {}
 var crop_nodes: Dictionary = {}
@@ -518,6 +519,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	tiles.clear()
 	rocks.clear()
 	rock_nodes.clear()
+	scenery_blockers.clear()
 	tile_nodes.clear()
 	crop_nodes.clear()
 	path.clear()
@@ -549,6 +551,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 		if states[stage].bridge: open_bridge()
 	for decoration in current_level.decorations():
 		asset(board,decoration.asset,grid_pos(decoration.cell),decoration.size)
+		if decoration.blocks: scenery_blockers[decoration.cell] = true
 	for c in crops:
 		var crop_kind: String = crops[c].kind
 		var file := "WheatFull" if crop_kind.to_lower() == "w" else "Carrot3"
@@ -591,7 +594,7 @@ func update_ui() -> void:
 	gate.material_override = material(MINT if crops.is_empty() else Color("b98860"),0.5)
 
 func walkable(c: Vector2i) -> bool:
-	return tiles.has(c) and not rocks.has(c) and not crops.has(c)
+	return tiles.has(c) and not rocks.has(c) and not crops.has(c) and not scenery_blockers.has(c)
 
 func find_path(start: Vector2i, target: Vector2i) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []

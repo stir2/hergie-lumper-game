@@ -23,13 +23,14 @@ const TILE_KINDS := {
 }
 
 const DECORATION_ASSETS := {
-	10: {"asset": "res://Meshes/Kevin/Glass1.tres", "size": 0.9},
+	10: {"asset": "res://Meshes/Kevin/Glass1.tres", "size": 0.9, "blocks": true},
 	11: {"asset": "res://Meshes/Kevin/Railing1.tres", "size": 0.9},
-	12: {"asset": "res://Meshes/Kevin/BrickBuilding1.tres", "size": 1.35},
-	13: {"asset": "res://Meshes/Kevin/BrickBuilding2.tres", "size": 1.35},
-	14: {"asset": "res://Meshes/Kevin/BrickBuilding3.tres", "size": 1.35},
-	15: {"asset": "res://Meshes/Kevin/ConcreteBuilding1.tres", "size": 1.35},
-	16: {"asset": "res://Meshes/Kevin/ConcreteBuilding2.tres", "size": 1.35}
+	12: {"asset": "res://Meshes/Kevin/BrickBuilding1.tres", "size": 1.35, "blocks": true},
+	13: {"asset": "res://Meshes/Kevin/BrickBuilding2.tres", "size": 1.35, "blocks": true},
+	14: {"asset": "res://Meshes/Kevin/BrickBuilding3.tres", "size": 1.35, "blocks": true},
+	15: {"asset": "res://Meshes/Kevin/ConcreteBuilding1.tres", "size": 1.35, "blocks": true},
+	16: {"asset": "res://Meshes/Kevin/ConcreteBuilding2.tres", "size": 1.35, "blocks": true},
+	17: {"asset": "res://Meshes/Jefferson/ConcreteDebris.tres", "size": 0.9, "blocks": true}
 }
 
 func _ready() -> void:
@@ -63,7 +64,7 @@ func decorations() -> Array[Dictionary]:
 		var tile := grid_map().get_cell_item(grid_cell)
 		if DECORATION_ASSETS.has(tile):
 			var decoration: Dictionary = DECORATION_ASSETS[tile]
-			cells.append({"cell": Vector2i(grid_cell.x+5, grid_cell.z+4), "asset": decoration.asset, "size": decoration.size})
+			cells.append({"cell": Vector2i(grid_cell.x+5, grid_cell.z+4), "asset": decoration.asset, "size": decoration.size, "blocks": decoration.get("blocks",false)})
 	return cells
 
 func grid_map() -> GridMap:
