@@ -750,14 +750,6 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	gate = box(board,grid_pos(Vector2i(10,4))+Vector3(0,0.02,0),Vector3(0.83,0.06,0.83),MINT,0.5)
 	if stage > 0:
 		box(board,grid_pos(Vector2i(0,4))+Vector3(0,0.02,0),Vector3(0.83,0.06,0.83),Color("7e9ba7"),0.25)
-	var arrow := Label3D.new()
-	arrow.text = "→"
-	arrow.font_size = 80
-	arrow.pixel_size = 0.009
-	arrow.position = grid_pos(Vector2i(10,4))+Vector3(0,0.65,0)
-	arrow.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	arrow.modulate = MINT
-	board.add_child(arrow)
 	cell = Vector2i(9,4) if from_right else Vector2i(1,4)
 	bunny.position = grid_pos(cell)
 	bunny_model.rotation = Vector3(0, BUNNY_ROTATION_OFFSET, 0)
