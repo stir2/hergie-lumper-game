@@ -775,6 +775,8 @@ func hit_crop(c: Vector2i) -> void:
 	total_harvest += 1
 	crops.erase(c)
 	crop_nodes.erase(c)
+	var remnant_file := "WheatChopped" if kind.to_lower() == "w" else "CarrotDugOut3"
+	asset(board,"res://Meshes/Jefferson/"+remnant_file+".tres",grid_pos(c),0.81)
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(n,"position:y",n.position.y+0.5,0.2)
