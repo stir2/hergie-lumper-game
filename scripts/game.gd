@@ -623,9 +623,6 @@ func load_stage(index: int, from_right: bool = false) -> void:
 		if crop_kind == crop_kind.to_upper():
 			box(n,Vector3(0,0.05,0),Vector3(0.13,0.035,0.13),GOLD,0.3)
 	gate = box(board,grid_pos(Vector2i(10,4))+Vector3(0,0.02,0),Vector3(0.83,0.06,0.83),MINT,0.5)
-	for x in [-5.42,5.42]:
-		for z in [-3.75,3.75]:
-			box(board,Vector3(x,0.15,z),Vector3(0.10,0.60,0.10),Color("91cabc"),0.5)
 	if stage > 0:
 		box(board,grid_pos(Vector2i(0,4))+Vector3(0,0.02,0),Vector3(0.83,0.06,0.83),Color("7e9ba7"),0.25)
 	var arrow := Label3D.new()
