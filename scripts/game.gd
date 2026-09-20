@@ -11,6 +11,8 @@ const SCYTHE_RETURN_MAX_SPEED := 22.0
 const SCYTHE_MODEL_SCALE := 0.675
 const SCYTHE_HITBOX_VERTICAL_PADDING := 0.315
 const BUNNY_ROTATION_OFFSET := -PI / 2.0
+const MUSIC_GAMEPLAY_VOLUME_DB := -14.0
+const MUSIC_MENU_VOLUME_DB := -18.0
 const W := 11
 const H := 9
 const MINT := Color("a6e6c7")
@@ -96,6 +98,7 @@ var muted := false
 var finished := false
 var cut_audio: AudioStreamPlayer
 var throw_audio: AudioStreamPlayer
+var background_music: AudioStreamPlayer
 var transition_lock := 0.0
 
 func _ready() -> void:
@@ -258,6 +261,12 @@ func build_world() -> void:
 	throw_audio.stream = load("res://Sounds/Scythe/boomerang_loop.wav")
 	throw_audio.volume_db = -24
 	add_child(throw_audio)
+	background_music = AudioStreamPlayer.new()
+	background_music.stream = load("res://Sounds/Music/f_sonata.mp3")
+	background_music.volume_db = MUSIC_GAMEPLAY_VOLUME_DB
+	background_music.finished.connect(background_music.play)
+	add_child(background_music)
+	background_music.play()
 
 func build_post_process() -> void:
 	# Explicitly copy the complete root viewport after the world and HUD
@@ -460,6 +469,7 @@ func show_title() -> void:
 	cancel_hop()
 	path.clear()
 	title_active = true
+	update_music_volume()
 	hud.visible = false
 	if is_instance_valid(title_menu): title_menu.queue_free()
 	title_menu = Control.new()
@@ -489,6 +499,7 @@ func show_title() -> void:
 
 func begin_game() -> void:
 	title_active = false
+	update_music_volume()
 	hud.visible = true
 	if is_instance_valid(title_menu):
 		title_menu.queue_free()
@@ -496,6 +507,10 @@ func begin_game() -> void:
 
 func quit_game() -> void:
 	get_tree().quit()
+
+func update_music_volume() -> void:
+	if is_instance_valid(background_music):
+		background_music.volume_db = MUSIC_MENU_VOLUME_DB if title_active else MUSIC_GAMEPLAY_VOLUME_DB
 
 func grid_pos(c: Vector2i) -> Vector3:
 	return Vector3(c.x-5,0,c.y-4)
