@@ -1,7 +1,6 @@
 [gd_resource type="MeshLibrary" format=3 uid="uid://ct4bjwad5rpm0"]
 
 [ext_resource type="ArrayMesh" uid="uid://r7rn1ud4x04f" path="res://Meshes/Jefferson/DirtTile.tres" id="1_msone"]
-[ext_resource type="Texture2D" uid="uid://rhtxrxsek8l5" path="res://assets/panorama_image.webp" id="2_dkqqx"]
 [ext_resource type="ArrayMesh" uid="uid://crb7d1o2v1uh8" path="res://Meshes/Kevin/Glass1.tres" id="3_ovtdq"]
 [ext_resource type="ArrayMesh" uid="uid://dogvhxv70rcnd" path="res://Meshes/Kevin/Railing1.tres" id="4_moo07"]
 [ext_resource type="ArrayMesh" uid="uid://t0bowujwrw5q" path="res://Meshes/Kevin/BrickBuilding1.tres" id="5_vlyw0"]
@@ -17,7 +16,6 @@
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b55xb"]
 shading_mode = 0
-albedo_texture = ExtResource("2_dkqqx")
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_dx2lc"]
 material = SubResource("StandardMaterial3D_b55xb")
