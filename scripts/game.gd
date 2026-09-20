@@ -35,6 +35,7 @@ const LEVELS := [
 	preload("res://scenes/levels/04_bridge_of_stars.tscn"),
 	preload("res://scenes/levels/05_wandering_nursery.tscn"),
 	preload("res://scenes/levels/06_lunar_labyrinth.tscn"),
+	preload("res://scenes/levels/07_last_constellation.tscn"),
 	preload("res://scenes/levels/08_empty_field_01.tscn"),
 	preload("res://scenes/levels/09_empty_field_02.tscn"),
 	preload("res://scenes/levels/10_empty_field_03.tscn"),
@@ -44,8 +45,6 @@ const LEVELS := [
 	preload("res://scenes/levels/14_empty_field_07.tscn"),
 	preload("res://scenes/levels/15_empty_field_08.tscn"),
 	preload("res://scenes/levels/16_empty_field_09.tscn"),
-	preload("res://scenes/levels/17_empty_field_10.tscn"),
-	preload("res://scenes/levels/07_last_constellation.tscn")
 ]
 
 var stage := 0
