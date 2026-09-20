@@ -30,10 +30,12 @@ The graphical input check injects mouse events to verify walking, throws, locked
 
 The smoke check exercises movement/path blocking, a real scythe flight and return, solvability of every field at starter range, bridges, purchases, and crop persistence. For a visual check, run `godot --path . -- --capture`; it writes `screenshot.png`. `--stage=2` previews the first greenhouse.
 
+The default window is 1920×1200. The game view renders at 1940×1156 with 4× MSAA, and the skybox renders at twice the logical window resolution. Floor tiles use the supplied Jefferson dirt textures.
+
 ## Project
 
 - `scripts/game.gd`: level layouts, gameplay, UI, shops, and smoke checks.
-- `scripts/space.gd`: full-window panorama skybox.
+- `scripts/space.gd`: full-window panorama skybox rotating at 0.5 degrees per second.
 - `scenes/main.tscn`: entry scene.
 - `assets/icons/`: the wheat and carrot icons referenced by the supplied item resources.
 - `assets/panorama_image.webp`, `Materials/SpaceSky.tres`: supplied panorama and sky material.

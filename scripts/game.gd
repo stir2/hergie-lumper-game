@@ -1,5 +1,6 @@
 extends Node
 
+const RENDER_SCALE := 2.0
 const W := 11
 const H := 9
 const MINT := Color("a6e6c7")
@@ -26,6 +27,7 @@ var states: Dictionary = {}
 var crops: Dictionary = {}
 var tiles: Dictionary = {}
 var rocks: Dictionary = {}
+var floor_materials: Dictionary = {}
 var tile_nodes: Dictionary = {}
 var crop_nodes: Dictionary = {}
 var path: Array[Vector2i] = []
@@ -100,6 +102,33 @@ func box(parent: Node3D, pos: Vector3, size: Vector3, color: Color, glow: float 
 	n.position = pos
 	return n
 
+func floor_tile(c: Vector2i, kind: String) -> MeshInstance3D:
+	if floor_materials.is_empty():
+		for texture_name in ["DirtTile_lowdirt.png","lowdirtSandy.webp","lowdirtRocky.webp","lowdirtseedsnweeds.webp"]:
+			var soil := material(Color.WHITE)
+			soil.albedo_texture = load("res://Imported/PNG/Jefferson/"+texture_name)
+			soil.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS_ANISOTROPIC
+			floor_materials[texture_name] = soil
+	var texture_name := "DirtTile_lowdirt.png"
+	if kind.to_lower() in ["w","c"]:
+		texture_name = "lowdirtseedsnweeds.webp"
+	elif kind == "#":
+		texture_name = "lowdirtRocky.webp"
+	elif (c.x*13+c.y*7+stage)%5 == 0:
+		texture_name = "lowdirtSandy.webp"
+	elif (c.x*7+c.y*3+stage)%7 == 0:
+		texture_name = "lowdirtRocky.webp"
+	var tile := box(board,grid_pos(c)-Vector3(0,0.19,0),Vector3(0.96,0.34,0.96),Color("574435"))
+	var surface := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(0.96,0.96)
+	surface.mesh = plane
+	surface.material_override = floor_materials[texture_name]
+	surface.position.y = 0.176
+	surface.rotation.y = float((c.x+c.y)%4)*PI/2
+	tile.add_child(surface)
+	return tile
+
 func asset(parent: Node3D, file: String, pos: Vector3, target_size: float) -> MeshInstance3D:
 	var n := MeshInstance3D.new()
 	n.mesh = load(file)
@@ -127,15 +156,16 @@ func build_world() -> void:
 	add_child(bg)
 	view_container = SubViewportContainer.new()
 	view_container.position = Vector2(280,126)
-	view_container.size = Vector2(970,578)
-	view_container.stretch = true
+	view_container.size = Vector2(970,578) * RENDER_SCALE
+	view_container.scale = Vector2.ONE / RENDER_SCALE
+	view_container.stretch = false
 	view_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(view_container)
 	view = SubViewport.new()
-	view.size = Vector2i(970,578)
+	view.size = Vector2i(Vector2(970,578) * RENDER_SCALE)
 	view.transparent_bg = true
 	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	view.msaa_3d = Viewport.MSAA_2X
+	view.msaa_3d = Viewport.MSAA_4X
 	view_container.add_child(view)
 	world = Node3D.new()
 	view.add_child(world)
@@ -247,9 +277,6 @@ func build_ui() -> void:
 	ui = Control.new()
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(ui)
-	label_at("✦",Vector2(34,25),43,MINT)
-	label_at("ORBIT & HARVEST",Vector2(90,27),30,WHITE)
-	label_at("A LITTLE GARDEN IN A VERY BIG UNIVERSE",Vector2(92,70),11,MUTED)
 	crop_icon("wheat",Vector2(982,32),Vector2(42,52),ui)
 	wheat_total = label_at("0",Vector2(1040,40),26,GOLD)
 	crop_icon("carrot",Vector2(1110,32),Vector2(48,52),ui)
@@ -304,9 +331,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 			var kind: String = rows[z][x]
 			if kind == "~" or kind == "b": continue
 			tiles[c] = kind
-			var ground_color := Color("456363") if (x+z)%2 == 0 else Color("3e595b")
-			if kind.to_lower() in ["w","c"]: ground_color = Color("6a5f44")
-			tile_nodes[c] = box(board,grid_pos(c)-Vector3(0,0.19,0),Vector3(0.96,0.34,0.96),ground_color)
+			tile_nodes[c] = floor_tile(c,kind)
 			box(board,grid_pos(c)-Vector3(0,0.44,0),Vector3(0.85,0.18,0.85),Color("213943"))
 			if kind == "#":
 				rocks[c] = true
@@ -391,7 +416,7 @@ func find_path(start: Vector2i, target: Vector2i) -> Array[Vector2i]:
 	return result
 
 func mouse_world(screen_position: Vector2 = Vector2.INF) -> Variant:
-	var mouse := view_container.get_local_mouse_position() if screen_position == Vector2.INF else screen_position-view_container.position
+	var mouse := view_container.get_local_mouse_position() if screen_position == Vector2.INF else view_container.get_global_transform().affine_inverse() * screen_position
 	if not Rect2(Vector2.ZERO,view_container.size).has_point(mouse): return null
 	return Plane(Vector3.UP,0).intersects_ray(camera.project_ray_origin(mouse),camera.project_ray_normal(mouse))
 

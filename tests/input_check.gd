@@ -15,8 +15,8 @@ func check(condition: bool, message: String) -> void:
 
 func click(point: Vector2, mouse_button: int) -> void:
 	var event := InputEventMouseButton.new()
-	event.position = point
-	event.global_position = point
+	event.position = get_viewport().get_final_transform() * point
+	event.global_position = event.position
 	event.button_index = mouse_button
 	event.pressed = true
 	Input.parse_input_event(event)
@@ -26,7 +26,7 @@ func click(point: Vector2, mouse_button: int) -> void:
 	Input.parse_input_event(event)
 
 func click_tile(c: Vector2i, mouse_button: int = MOUSE_BUTTON_LEFT) -> void:
-	var point: Vector2 = game.camera.unproject_position(game.grid_pos(c)) + game.view_container.position
+	var point: Vector2 = game.view_container.get_global_transform() * game.camera.unproject_position(game.grid_pos(c))
 	await click(point,mouse_button)
 
 func clear_crops() -> void:
@@ -34,7 +34,8 @@ func clear_crops() -> void:
 		while game.crops.has(c): game.hit_crop(c)
 
 func screenshot(file: String) -> void:
-	await RenderingServer.frame_post_draw
+	await get_tree().process_frame
+	RenderingServer.force_draw()
 	get_viewport().get_texture().get_image().save_png("res://"+file)
 
 func run() -> void:
