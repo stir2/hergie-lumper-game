@@ -460,14 +460,19 @@ func show_title() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title_menu.add_child(shade)
 	menu_image("res://Imported/PNG/Jefferson/Menu-HergieLogoFinal.webp",Vector2(300,74),Vector2(680,306),title_menu)
-	var tagline := label_at("A SPACE-FARMING JOURNEY",Vector2(488,374),16,MINT,title_menu)
-	tagline.size = Vector2(304,28)
-	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	menu_button("res://Imported/PNG/Jefferson/Menu-Start.webp","res://Imported/PNG/Jefferson/Menu-StartHover.webp","res://Imported/PNG/Jefferson/Menu-StartClick.webp",Vector2(465,432),Vector2(350,108),begin_game,title_menu)
-	menu_button("res://Imported/PNG/Jefferson/Menu-Exit.webp","res://Imported/PNG/Jefferson/Menu-ExitHover.webp","res://Imported/PNG/Jefferson/Menu-ExitClick.webp",Vector2(465,552),Vector2(350,108),quit_game,title_menu)
-	var hint := label_at("ESC opens the garden menu during play",Vector2(420,702),13,MUTED,title_menu)
-	hint.size = Vector2(440,24)
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var menu_button_size := Vector2(350,108)
+	var start_row := CenterContainer.new()
+	title_menu.add_child(start_row)
+	start_row.position = Vector2(0,432)
+	start_row.size = Vector2(1280,108)
+	var start_button := menu_button("res://Imported/PNG/Jefferson/Menu-Start.webp","res://Imported/PNG/Jefferson/Menu-StartHover.webp","res://Imported/PNG/Jefferson/Menu-StartClick.webp",Vector2.ZERO,menu_button_size,begin_game,start_row)
+	start_button.custom_minimum_size = menu_button_size
+	var exit_row := CenterContainer.new()
+	title_menu.add_child(exit_row)
+	exit_row.position = Vector2(0,552)
+	exit_row.size = Vector2(1280,108)
+	var exit_button := menu_button("res://Imported/PNG/Jefferson/Menu-Exit.webp","res://Imported/PNG/Jefferson/Menu-ExitHover.webp","res://Imported/PNG/Jefferson/Menu-ExitClick.webp",Vector2.ZERO,menu_button_size,quit_game,exit_row)
+	exit_button.custom_minimum_size = menu_button_size
 
 func begin_game() -> void:
 	title_active = false
@@ -481,6 +486,9 @@ func quit_game() -> void:
 
 func grid_pos(c: Vector2i) -> Vector3:
 	return Vector3(c.x-5,0,c.y-4)
+
+func nearest_cell(pos: Vector3) -> Vector2i:
+	return Vector2i(clampi(roundi(pos.x)+5,0,W-1),clampi(roundi(pos.z)+4,0,H-1))
 
 func is_shop(index: int = stage) -> bool:
 	return LEVELS[index].get("shop",false)
@@ -620,6 +628,7 @@ func charged_distance() -> float:
 func start_charge(target: Vector3) -> void:
 	if shot_active or charging or is_shop() or finished or is_instance_valid(overlay): return
 	path.clear()
+	cell = nearest_cell(bunny.position)
 	bunny.position = grid_pos(cell)
 	charging = true
 	charge_time = 0.0
