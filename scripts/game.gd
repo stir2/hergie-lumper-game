@@ -96,6 +96,7 @@ var shot_hits: Dictionary = {}
 var time := 0.0
 var bridge_open := false
 var muted := false
+var music_paused := false
 var finished := false
 var cut_audio: AudioStreamPlayer
 var throw_audio: AudioStreamPlayer
@@ -229,8 +230,6 @@ func build_world() -> void:
 	bunny_model = Node3D.new()
 	bunny.add_child(bunny_model)
 	asset(bunny_model,"res://Meshes/Jefferson/BunnyFarmer.tres",Vector3.ZERO,1.02)
-	# A little oxygen pack marks our space farmer.
-	box(bunny_model,Vector3(0,0.40,0.27),Vector3(0.30,0.36,0.18),Color("74acac"))
 	hand_anchor = Node3D.new()
 	bunny_model.add_child(hand_anchor)
 	# Hand attachment point for the held scythe. Adjust these values if needed
@@ -747,6 +746,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			if is_instance_valid(overlay): close_overlay()
 			else: show_title()
 			return
+		if event.keycode == KEY_M:
+			music_paused = not music_paused
+			background_music.stream_paused = music_paused
+			return
 		if title_active: return
 		if event.keycode == KEY_6 and stage > 0:
 			finished = false
@@ -764,9 +767,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			if is_shop(): show_shop()
 			return
 		if event.keycode == KEY_R and not is_instance_valid(overlay) and not is_shop(): reset_field()
-		if event.keycode == KEY_M:
-			muted = not muted
-			AudioServer.set_bus_mute(0,muted)
 		if event.keycode == KEY_F11:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
 	if is_instance_valid(overlay) or finished: return
