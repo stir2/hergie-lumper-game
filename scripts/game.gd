@@ -639,11 +639,6 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	transition_lock = 0.6
 	if has_shop() and current_level.shop:
 		asset(board,"res://Meshes/Kevin/Greenhouse.tres",Vector3(0,0,-2),3.7)
-		for x in range(3,8):
-			for z in [0,7]:
-				asset(board,"res://Meshes/Jefferson/WheatFull.tres",grid_pos(Vector2i(x,z)),0.72)
-		for x in range(4,7):
-			for z in range(1,4): rocks[Vector2i(x,z)] = "normal"
 	update_ui()
 
 func update_ui() -> void:
