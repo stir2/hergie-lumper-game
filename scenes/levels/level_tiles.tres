@@ -1,4 +1,4 @@
-[gd_resource type="MeshLibrary" format=3]
+[gd_resource type="MeshLibrary" format=3 uid="uid://de828sfelxtse"]
 
 [ext_resource type="ArrayMesh" uid="uid://r7rn1ud4x04f" path="res://Meshes/Jefferson/DirtTile.tres" id="1_msone"]
 [ext_resource type="ArrayMesh" uid="uid://crb7d1o2v1uh8" path="res://Meshes/Kevin/Glass1.tres" id="3_ovtdq"]
