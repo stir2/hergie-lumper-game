@@ -40,6 +40,7 @@ var crops: Dictionary = {}
 var tiles: Dictionary = {}
 var rocks: Dictionary = {}
 var rock_nodes: Dictionary = {}
+var scenery_blockers: Dictionary = {}
 var floor_materials: Dictionary = {}
 var tile_nodes: Dictionary = {}
 var crop_nodes: Dictionary = {}
@@ -164,15 +165,17 @@ func floor_tile(c: Vector2i, kind: String) -> MeshInstance3D:
 func asset(parent: Node3D, file: String, pos: Vector3, target_size: float) -> MeshInstance3D:
 	var n := MeshInstance3D.new()
 	n.mesh = load(file)
-	if "Wheat" in file:
+	var wheat_mesh := "Wheat" in file
+	if wheat_mesh:
 		n.material_override = material(Color("d7b354"))
 	if "Greenhouse.tres" in file:
 		n.material_override = load("res://Materials/Atlas1.tres")
 	var bounds := n.mesh.get_aabb()
 	var factor := target_size / maxf(bounds.size.x,maxf(bounds.size.y,bounds.size.z))
 	n.scale = Vector3.ONE * factor
+	if wheat_mesh: n.rotation.y = -PI/2
 	parent.add_child(n)
-	n.position = pos - Vector3(bounds.get_center().x,bounds.position.y,bounds.get_center().z)*factor
+	n.position = pos - n.basis*Vector3(bounds.get_center().x,bounds.position.y,bounds.get_center().z)
 	return n
 
 func build_world() -> void:
@@ -516,6 +519,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	tiles.clear()
 	rocks.clear()
 	rock_nodes.clear()
+	scenery_blockers.clear()
 	tile_nodes.clear()
 	crop_nodes.clear()
 	path.clear()
@@ -547,6 +551,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 		if states[stage].bridge: open_bridge()
 	for decoration in current_level.decorations():
 		asset(board,decoration.asset,grid_pos(decoration.cell),decoration.size)
+		if decoration.blocks: scenery_blockers[decoration.cell] = true
 	for c in crops:
 		var crop_kind: String = crops[c].kind
 		var file := "WheatFull" if crop_kind.to_lower() == "w" else "Carrot3"
@@ -589,7 +594,7 @@ func update_ui() -> void:
 	gate.material_override = material(MINT if crops.is_empty() else Color("b98860"),0.5)
 
 func walkable(c: Vector2i) -> bool:
-	return tiles.has(c) and not rocks.has(c) and not crops.has(c)
+	return tiles.has(c) and not rocks.has(c) and not crops.has(c) and not scenery_blockers.has(c)
 
 func find_path(start: Vector2i, target: Vector2i) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
@@ -775,6 +780,8 @@ func hit_crop(c: Vector2i) -> void:
 	total_harvest += 1
 	crops.erase(c)
 	crop_nodes.erase(c)
+	var remnant_file := "WheatChopped" if kind.to_lower() == "w" else "CarrotDugOut3"
+	asset(board,"res://Meshes/Jefferson/"+remnant_file+".tres",grid_pos(c),0.81)
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(n,"position:y",n.position.y+0.5,0.2)

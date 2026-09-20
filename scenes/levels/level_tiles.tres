@@ -1,143 +1,153 @@
-[gd_resource type="MeshLibrary" format=3 uid="uid://de828sfelxtse"]
+[gd_resource type="MeshLibrary" format=3 uid="uid://bn4vgj823gf6i"]
 
-[ext_resource type="ArrayMesh" uid="uid://r7rn1ud4x04f" path="res://Meshes/Jefferson/DirtTile.tres" id="1_msone"]
-[ext_resource type="ArrayMesh" uid="uid://crb7d1o2v1uh8" path="res://Meshes/Kevin/Glass1.tres" id="3_ovtdq"]
-[ext_resource type="ArrayMesh" uid="uid://dogvhxv70rcnd" path="res://Meshes/Kevin/Railing1.tres" id="4_moo07"]
-[ext_resource type="ArrayMesh" uid="uid://t0bowujwrw5q" path="res://Meshes/Kevin/BrickBuilding1.tres" id="5_vlyw0"]
-[ext_resource type="ArrayMesh" uid="uid://ct11y78xbnxou" path="res://Meshes/Kevin/BrickBuilding2.tres" id="6_44yim"]
-[ext_resource type="ArrayMesh" uid="uid://c5nnrn5u4smg" path="res://Meshes/Kevin/BrickBuilding3.tres" id="7_hyimm"]
-[ext_resource type="ArrayMesh" uid="uid://ckhwh48nvq2kt" path="res://Meshes/Kevin/ConcreteBuilding1.tres" id="8_cmn40"]
-[ext_resource type="ArrayMesh" uid="uid://bepwo6n7fctl" path="res://Meshes/Kevin/ConcreteBuilding2.tres" id="9_51y3r"]
-[ext_resource type="ArrayMesh" uid="uid://b486n2gavh6hu" path="res://Meshes/Jefferson/RockPlain2.tres" id="10_duyo8"]
-[ext_resource type="ArrayMesh" uid="uid://cngfm7denpjvo" path="res://Meshes/Kevin/Telepole.tres" id="11_0j2dt"]
-[ext_resource type="ArrayMesh" uid="uid://dp85cw00086kj" path="res://Meshes/Jefferson/WheatFull.tres" id="12_hnupg"]
-[ext_resource type="ArrayMesh" uid="uid://k41s042qu5hi" path="res://Meshes/Jefferson/Carrot3.tres" id="13_5fchl"]
-[ext_resource type="ArrayMesh" uid="uid://dp0oh10wa3v8y" path="res://Meshes/Jefferson/RockTitanium3.tres" id="14_ymjxq"]
+[ext_resource type="ArrayMesh" uid="uid://r7rn1ud4x04f" path="res://Meshes/Jefferson/DirtTile.tres" id="1_dkqqx"]
+[ext_resource type="Texture2D" uid="uid://rhtxrxsek8l5" path="res://assets/panorama_image.webp" id="2_ovtdq"]
+[ext_resource type="ArrayMesh" uid="uid://crb7d1o2v1uh8" path="res://Meshes/Kevin/Glass1.tres" id="3_moo07"]
+[ext_resource type="ArrayMesh" uid="uid://dogvhxv70rcnd" path="res://Meshes/Kevin/Railing1.tres" id="4_vlyw0"]
+[ext_resource type="ArrayMesh" uid="uid://t0bowujwrw5q" path="res://Meshes/Kevin/BrickBuilding1.tres" id="5_44yim"]
+[ext_resource type="ArrayMesh" uid="uid://ct11y78xbnxou" path="res://Meshes/Kevin/BrickBuilding2.tres" id="6_hyimm"]
+[ext_resource type="ArrayMesh" uid="uid://c5nnrn5u4smg" path="res://Meshes/Kevin/BrickBuilding3.tres" id="7_cmn40"]
+[ext_resource type="ArrayMesh" uid="uid://ckhwh48nvq2kt" path="res://Meshes/Kevin/ConcreteBuilding1.tres" id="8_51y3r"]
+[ext_resource type="ArrayMesh" uid="uid://bepwo6n7fctl" path="res://Meshes/Kevin/ConcreteBuilding2.tres" id="9_duyo8"]
+[ext_resource type="ArrayMesh" uid="uid://dgash1jevv6vr" path="res://Meshes/Jefferson/ConcreteDebris.tres" id="10_0j2dt"]
+[ext_resource type="ArrayMesh" uid="uid://b486n2gavh6hu" path="res://Meshes/Jefferson/RockPlain2.tres" id="11_hnupg"]
+[ext_resource type="ArrayMesh" uid="uid://cngfm7denpjvo" path="res://Meshes/Kevin/Telepole.tres" id="12_5fchl"]
+[ext_resource type="ArrayMesh" uid="uid://dp85cw00086kj" path="res://Meshes/Jefferson/WheatFull.tres" id="13_ymjxq"]
+[ext_resource type="ArrayMesh" uid="uid://k41s042qu5hi" path="res://Meshes/Jefferson/Carrot3.tres" id="14_b55xb"]
+[ext_resource type="ArrayMesh" uid="uid://dp0oh10wa3v8y" path="res://Meshes/Jefferson/RockTitanium3.tres" id="15_dx2lc"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b55xb"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0y22l"]
 shading_mode = 0
+albedo_texture = ExtResource("2_ovtdq")
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_dx2lc"]
-material = SubResource("StandardMaterial3D_b55xb")
+[sub_resource type="PlaneMesh" id="PlaneMesh_wk115"]
+material = SubResource("StandardMaterial3D_0y22l")
 size = Vector2(1, 1)
 
 [resource]
 item/0/name = "Floor"
-item/0/mesh = ExtResource("1_msone")
+item/0/mesh = ExtResource("1_dkqqx")
 item/0/mesh_transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 0.9999999, 0.5, 0.03731178, 0.49999994)
 item/0/mesh_cast_shadow = 1
 item/0/shapes = []
 item/0/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/0/navigation_layers = 1
 item/1/name = "Void"
-item/1/mesh = SubResource("PlaneMesh_dx2lc")
+item/1/mesh = SubResource("PlaneMesh_wk115")
 item/1/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/1/mesh_cast_shadow = 1
 item/1/shapes = []
 item/1/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/1/navigation_layers = 1
 item/2/name = "Rock"
-item/2/mesh = ExtResource("10_duyo8")
+item/2/mesh = ExtResource("11_hnupg")
 item/2/mesh_transform = Transform3D(1.0274842, 0, 0, 0, 1.0274842, 0, 0, 0, 1.0274842, 0.51881003, -0.052783817, 0.50307304)
 item/2/mesh_cast_shadow = 1
 item/2/shapes = []
 item/2/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/2/navigation_layers = 1
 item/3/name = "Switch"
-item/3/mesh = ExtResource("11_0j2dt")
+item/3/mesh = ExtResource("12_5fchl")
 item/3/mesh_transform = Transform3D(0.24691355, 0, 0, 0, 0.24691355, 0, 0, 0, 0.24691355, 0, 0.04167146, 0)
 item/3/mesh_cast_shadow = 1
 item/3/shapes = []
 item/3/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/3/navigation_layers = 1
 item/4/name = "Bridge"
-item/4/mesh = ExtResource("4_moo07")
+item/4/mesh = ExtResource("4_vlyw0")
 item/4/mesh_transform = Transform3D(0.45257217, 0, 0, 0, 0.45257217, 0, 0, 0, 0.45257217, 0, 0.17476407, -2.1580323e-07)
 item/4/mesh_cast_shadow = 1
 item/4/shapes = []
 item/4/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/4/navigation_layers = 1
 item/5/name = "Wheat"
-item/5/mesh = ExtResource("12_hnupg")
-item/5/mesh_transform = Transform3D(0.79585075, 0, 0, 0, 0.79585075, 0, 0, 0, 0.79585075, 0.3990777, -0.014857188, 0.4050186)
+item/5/mesh = ExtResource("13_ymjxq")
+item/5/mesh_transform = Transform3D(-3.4787742e-08, 0, -0.79585075, 0, 0.79585075, 0, 0.79585075, 0, -3.4787742e-08, -0.40501863, -0.014857188, 0.39907768)
 item/5/mesh_cast_shadow = 1
 item/5/shapes = []
 item/5/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/5/navigation_layers = 1
 item/6/name = "Tough Wheat"
-item/6/mesh = ExtResource("12_hnupg")
-item/6/mesh_transform = Transform3D(0.79585075, 0, 0, 0, 0.79585075, 0, 0, 0, 0.79585075, 0.3990777, -0.014857188, 0.4050186)
+item/6/mesh = ExtResource("13_ymjxq")
+item/6/mesh_transform = Transform3D(-3.4787742e-08, 0, -0.79585075, 0, 0.79585075, 0, 0.79585075, 0, -3.4787742e-08, -0.40501863, -0.014857188, 0.39907768)
 item/6/mesh_cast_shadow = 1
 item/6/shapes = []
 item/6/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/6/navigation_layers = 1
 item/7/name = "Carrot"
-item/7/mesh = ExtResource("13_5fchl")
+item/7/mesh = ExtResource("14_b55xb")
 item/7/mesh_transform = Transform3D(0.9956659, 0, 0, 0, 0.9956659, 0, 0, 0, 0.9956659, 0.20795648, 0.019533983, -0.014434092)
 item/7/mesh_cast_shadow = 1
 item/7/shapes = []
 item/7/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/7/navigation_layers = 1
 item/8/name = "Tough Carrot"
-item/8/mesh = ExtResource("13_5fchl")
+item/8/mesh = ExtResource("14_b55xb")
 item/8/mesh_transform = Transform3D(0.9956659, 0, 0, 0, 0.9956659, 0, 0, 0, 0.9956659, 0.20795648, 0.019533983, -0.014434092)
 item/8/mesh_cast_shadow = 1
 item/8/shapes = []
 item/8/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/8/navigation_layers = 1
 item/9/name = "Titanium Rock"
-item/9/mesh = ExtResource("14_ymjxq")
+item/9/mesh = ExtResource("15_dx2lc")
 item/9/mesh_transform = Transform3D(1.0274842, 0, 0, 0, 1.0274842, 0, 0, 0, 1.0274842, 0.51034117, -0.052783817, 0.51541024)
 item/9/mesh_cast_shadow = 1
 item/9/shapes = []
 item/9/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/9/navigation_layers = 1
 item/10/name = "Broken Glass"
-item/10/mesh = ExtResource("3_ovtdq")
+item/10/mesh = ExtResource("3_moo07")
 item/10/mesh_transform = Transform3D(0.97210485, 0, 0, 0, 0.97210485, 0, 0, 0, 0.97210485, 4.635357e-07, 0.068886645, 0)
 item/10/mesh_cast_shadow = 1
 item/10/shapes = []
 item/10/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/10/navigation_layers = 1
 item/11/name = "Railing"
-item/11/mesh = ExtResource("4_moo07")
+item/11/mesh = ExtResource("4_vlyw0")
 item/11/mesh_transform = Transform3D(0.45257217, 0, 0, 0, 0.45257217, 0, 0, 0, 0.45257217, 0, 0.17476407, -2.1580323e-07)
 item/11/mesh_cast_shadow = 1
 item/11/shapes = []
 item/11/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/11/navigation_layers = 1
 item/12/name = "Brick Building 1"
-item/12/mesh = ExtResource("5_vlyw0")
+item/12/mesh = ExtResource("5_44yim")
 item/12/mesh_transform = Transform3D(0.22964633, 0, 0, 0, 0.22964633, 0, 0, 0, 0.22964633, 0, 0.675, 0)
 item/12/mesh_cast_shadow = 1
 item/12/shapes = []
 item/12/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/12/navigation_layers = 1
 item/13/name = "Brick Building 2"
-item/13/mesh = ExtResource("6_44yim")
+item/13/mesh = ExtResource("6_hyimm")
 item/13/mesh_transform = Transform3D(0.24311219, 0, 0, 0, 0.24311219, 0, 0, 0, 0.24311219, -0.6025214, 0, -0.5998264)
 item/13/mesh_cast_shadow = 1
 item/13/shapes = []
 item/13/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/13/navigation_layers = 1
 item/14/name = "Brick Building 3"
-item/14/mesh = ExtResource("7_hyimm")
+item/14/mesh = ExtResource("7_cmn40")
 item/14/mesh_transform = Transform3D(0.17837396, 0, 0, 0, 0.17837396, 0, 0, 0, 0.17837396, -0.4149228, 0, -0.41057453)
 item/14/mesh_cast_shadow = 1
 item/14/shapes = []
 item/14/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/14/navigation_layers = 1
 item/15/name = "Concrete Building 1"
-item/15/mesh = ExtResource("8_cmn40")
+item/15/mesh = ExtResource("8_51y3r")
 item/15/mesh_transform = Transform3D(0.19210602, 0, 0, 0, 0.19210602, 0, 0, 0, 0.19210602, -0.52324164, 0, -0.4927722)
 item/15/mesh_cast_shadow = 1
 item/15/shapes = []
 item/15/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/15/navigation_layers = 1
 item/16/name = "Concrete Building 2"
-item/16/mesh = ExtResource("9_51y3r")
+item/16/mesh = ExtResource("9_duyo8")
 item/16/mesh_transform = Transform3D(0.19236507, 0, 0, 0, 0.19236507, 0, 0, 0, 0.19236507, -0.3513953, 0, -0.67499983)
 item/16/mesh_cast_shadow = 1
 item/16/shapes = []
 item/16/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/16/navigation_layers = 1
+item/17/name = "Concrete Debris"
+item/17/mesh = ExtResource("10_0j2dt")
+item/17/mesh_transform = Transform3D(0.9021571, 0, 0, 0, 0.9021571, 0, 0, 0, 0.9021571, 0.42920053, -0.07516228, 0.46778876)
+item/17/mesh_cast_shadow = 1
+item/17/shapes = []
+item/17/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/17/navigation_layers = 1

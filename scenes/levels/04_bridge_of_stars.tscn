@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ckleh8flqxy4l"]
 
 [ext_resource type="Script" uid="uid://u8r2akokwlm5" path="res://scripts/level_scene.gd" id="1"]
-[ext_resource type="MeshLibrary" uid="uid://ct4bjwad5rpm0" path="res://scenes/levels/level_tiles.tres" id="2_lge7k"]
+[ext_resource type="MeshLibrary" path="res://scenes/levels/level_tiles.tres" id="2_lge7k"]
 
 [node name="BridgeOfStars" type="Node3D" unique_id=2039415744]
 script = ExtResource("1")

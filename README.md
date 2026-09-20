@@ -34,7 +34,7 @@ The default window is 1920×1200. The game view renders at 1940×1156 with 4× M
 
 ## Project
 
-- `scenes/levels/`: editor-editable 3D scenes for the eight screens. Open a scene, select its `Layout` GridMap, then use the shared tile palette to paint terrain, crop, and scenery tiles. Titanium rocks, broken glass, railings, and building tiles render as non-blocking scenery in-game. Paint Floor to restore an ordinary tile. The playable board spans GridMap `x` values −5 through 5 and `z` values −4 through 4.
+- `scenes/levels/`: editor-editable 3D scenes for the eight screens. Open a scene, select its `Layout` GridMap, then use the shared tile palette to paint terrain, crop, and scenery tiles. Buildings, broken glass, concrete debris, and titanium rocks block movement; railings remain decorative. Paint Floor to restore an ordinary tile. The playable board spans GridMap `x` values −5 through 5 and `z` values −4 through 4.
 - `scenes/levels/level_tiles.tres`: the shared GridMap mesh library and its tile palette.
 - `scripts/level_scene.gd`: the 3D level-scene schema and GridMap-to-tile conversion.
 - `scripts/game.gd`: gameplay, UI, shops, and smoke checks.
