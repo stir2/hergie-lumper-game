@@ -357,7 +357,7 @@ func show_title() -> void:
 	title_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	title_menu.mouse_filter = Control.MOUSE_FILTER_STOP
 	var shade := ColorRect.new()
-	shade.color = Color(0.03,0.075,0.11,0.88)
+	shade.color = Color(0.03,0.075,0.11,0.68)
 	shade.position = Vector2.ZERO
 	shade.size = Vector2(1280,800)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -544,7 +544,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 			if finished: return
 			if is_instance_valid(overlay): close_overlay()
-			else: show_pause()
+			else: show_title()
 			return
 		if title_active: return
 		if event.keycode == KEY_R and not is_instance_valid(overlay) and not is_shop(): reset_field()
@@ -775,11 +775,6 @@ func close_overlay() -> void:
 	if is_instance_valid(overlay):
 		overlay.free()
 		overlay = null
-
-func show_pause() -> void:
-	var content := modal("Garden menu","The garden is paused.")
-	button("Resume farming",Vector2(30,232),Vector2(490,40),close_overlay,content)
-	button("Restart journey",Vector2(30,282),Vector2(490,40),restart,content)
 
 func show_ending() -> void:
 	var content := modal("A universe in bloom.","Every field harvested. Every little root brought home.\n\nYou gathered %d crops across six space gardens.\nYour scythe: power %d · reach %d.\n\nThanks for tending this corner of the universe." % [total_harvest,power,reach])
