@@ -7,7 +7,7 @@ A complete, small Godot 4 game about a bunny harvesting floating space gardens w
 Open `project.godot` in Godot 4.3 or newer (verified in Godot 4.7.2), then press **F6** on `scenes/main.tscn` or **F5**.
 
 - **Left click** an empty tile: walk along a calculated path.
-- **Right click** toward a crop: throw the scythe. The dotted line previews its direction and range. It returns automatically; throws are unlimited.
+- **Hold right click** toward a crop to charge, then **release** to throw. The dotted line appears only while charging and grows to the current range over 0.9 seconds. A quick tap throws one tile; a full charge uses the entire upgraded range. The scythe returns automatically; throws are unlimited. Releasing outside the game view, pausing, or switching away from the window cancels charging.
 - Harvest **every wheat and carrot** to open the eastern edge tile marked with an arrow. Walk onto it to enter the next screen. The western middle edge goes back.
 - Rocks block both movement and throws. Scythes fly across gaps. Crops block walking until harvested.
 - Step on a **gold switch** to open a bridge.

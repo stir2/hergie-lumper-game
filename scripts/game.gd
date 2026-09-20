@@ -1,6 +1,8 @@
 extends Node
 
 const RENDER_SCALE := 2.0
+const CHARGE_SECONDS := 0.9
+const MIN_THROW_DISTANCE := 1.0
 const W := 11
 const H := 9
 const MINT := Color("a6e6c7")
@@ -50,6 +52,10 @@ var aim_markers: Array[MeshInstance3D] = []
 var gate: MeshInstance3D
 var scythe: Node3D
 var held: Node3D
+var charging := false
+var charge_time := 0.0
+var charge_target := Vector3.ZERO
+var shot_limit := 0.0
 var shot_active := false
 var shot_return := false
 var shot_origin := Vector3.ZERO
@@ -185,7 +191,7 @@ func build_world() -> void:
 	camera = Camera3D.new()
 	world.add_child(camera)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 12.5
+	camera.size = 10.5
 	camera.position = Vector3(11,15,16)
 	camera.look_at(Vector3(0,0,0))
 	board = Node3D.new()
@@ -305,6 +311,7 @@ func save_stage() -> void:
 	states[stage] = {"crops":crops.duplicate(true),"bridge":bridge_open}
 
 func load_stage(index: int, from_right: bool = false) -> void:
+	cancel_charge()
 	stage = index
 	for n in board.get_children():
 		n.free()
@@ -412,6 +419,41 @@ func mouse_world(screen_position: Vector2 = Vector2.INF) -> Variant:
 	if not Rect2(Vector2.ZERO,view_container.size).has_point(mouse): return null
 	return Plane(Vector3.UP,0).intersects_ray(camera.project_ray_origin(mouse),camera.project_ray_normal(mouse))
 
+func _input(event: InputEvent) -> void:
+	if not charging: return
+	if event is InputEventMouseMotion:
+		var point = mouse_world(event.position)
+		if point != null: charge_target = point
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
+		# Handle release before UI controls can consume it, including outside the board.
+		var point = mouse_world(event.position)
+		var distance := charged_distance()
+		cancel_charge()
+		if point != null and not is_instance_valid(overlay) and not finished:
+			throw_scythe(point,distance)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		cancel_charge()
+
+func charged_distance() -> float:
+	return lerpf(MIN_THROW_DISTANCE,float(reach),clampf(charge_time/CHARGE_SECONDS,0.0,1.0))
+
+func start_charge(target: Vector3) -> void:
+	if shot_active or charging or is_shop() or finished or is_instance_valid(overlay): return
+	path.clear()
+	bunny.position = grid_pos(cell)
+	charging = true
+	charge_time = 0.0
+	charge_target = target
+	update_aim()
+
+func cancel_charge() -> void:
+	charging = false
+	charge_time = 0.0
+	for dot in aim_markers: dot.visible = false
+	if is_instance_valid(held): held.rotation.z = 0.0
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
@@ -430,21 +472,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		if point == null: return
 		var target := Vector2i(roundi(point.x)+5,roundi(point.z)+4)
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if shot_active:
+			if shot_active or charging:
 				return
 			if crops.has(target):
 				return
 			path = find_path(cell,target)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			throw_scythe(point)
+			start_charge(point)
 
-func throw_scythe(target: Vector3) -> void:
+func throw_scythe(target: Vector3, distance: float = -1.0) -> void:
 	if shot_active or is_shop(): return
 	path.clear()
 	bunny.position = grid_pos(cell)
 	var direction := target-bunny.position
 	direction.y = 0
 	if direction.length() < 0.1: return
+	shot_limit = float(reach) if distance < 0.0 else clampf(distance,MIN_THROW_DISTANCE,float(reach))
 	shot_dir = direction.normalized()
 	shot_origin = bunny.position+Vector3(0,0.45,0)
 	shot_distance = 0
@@ -487,6 +530,9 @@ func _process(dt: float) -> void:
 	time += dt
 	if is_instance_valid(overlay): return
 	transition_lock = maxf(0,transition_lock-dt)
+	if charging:
+		charge_time = minf(CHARGE_SECONDS,charge_time+dt)
+		held.rotation.z = -0.55*(charge_time/CHARGE_SECONDS)
 	if not path.is_empty():
 		var target := grid_pos(path[0])
 		var delta := target-bunny.position
@@ -500,7 +546,7 @@ func _process(dt: float) -> void:
 	else:
 		bunny_model.position.y = sin(time*2)*0.018
 		bunny_model.rotation.z = 0
-	if transition_lock == 0 and path.is_empty() and not shot_active:
+	if transition_lock == 0 and path.is_empty() and not shot_active and not charging:
 		if cell == Vector2i(10,4) and crops.is_empty():
 			next_stage()
 		elif cell == Vector2i(0,4) and stage > 0:
@@ -520,7 +566,7 @@ func update_shot(dt: float) -> void:
 			throw_audio.stop()
 		return
 	# Short substeps prevent a fast blade skipping a crop or a rock.
-	var distance := minf(dt*8,reach-shot_distance)
+	var distance := minf(dt*8,shot_limit-shot_distance)
 	var steps := maxi(1,ceili(distance/0.1))
 	for i in steps:
 		shot_distance += distance/steps
@@ -532,24 +578,30 @@ func update_shot(dt: float) -> void:
 		if crops.has(c) and not shot_hits.has(c):
 			shot_hits[c] = true
 			hit_crop(c)
-	if shot_distance >= reach-0.001: shot_return = true
+	if shot_distance >= shot_limit-0.001: shot_return = true
 
 func update_aim() -> void:
-	var point = mouse_world()
 	for dot in aim_markers: dot.visible = false
 	hover.visible = false
-	if point == null or is_shop(): return
-	var c := Vector2i(roundi(point.x)+5,roundi(point.z)+4)
-	if tiles.has(c):
-		hover.visible = true
-		hover.position = grid_pos(c)+Vector3(0,0.015,0)
-		hover.material_override = material(MINT if walkable(c) else GOLD)
-	if shot_active: return
-	var direction: Vector3 = (point-bunny.position).normalized()
+	if is_shop() or is_instance_valid(overlay): return
+	var point = mouse_world()
+	if point != null:
+		var c := Vector2i(roundi(point.x)+5,roundi(point.z)+4)
+		if tiles.has(c):
+			hover.visible = true
+			hover.position = grid_pos(c)+Vector3(0,0.015,0)
+			hover.material_override = material(MINT if walkable(c) else GOLD)
+	if not charging or shot_active: return
+	var direction := charge_target-bunny.position
 	direction.y = 0
+	if direction.length_squared()<0.01: return
 	direction = direction.normalized()
+	bunny_model.rotation.y = atan2(direction.x,direction.z)
+	var distance := charged_distance()
 	for i in aim_markers.size():
-		var p := bunny.position + direction*(i+1)*float(reach)/aim_markers.size()
+		var offset := float(i+1)*float(reach)/aim_markers.size()
+		if offset>distance: break
+		var p := bunny.position + direction*offset
 		var tc := Vector2i(roundi(p.x)+5,roundi(p.z)+4)
 		if rocks.has(tc): break
 		aim_markers[i].position = p+Vector3(0,0.15,0)
@@ -570,6 +622,7 @@ func next_stage() -> void:
 	else: load_stage(stage+1)
 
 func reset_field() -> void:
+	cancel_charge()
 	# Refunding the field's harvest prevents reset farming and keeps purchases valid.
 	# A field can only reset before leaving it; persisted cleared fields stay cleared.
 	if states.has(stage):
@@ -618,6 +671,7 @@ func buy_upgrade(strength: bool) -> void:
 	show_shop()
 
 func modal(title: String, body: String) -> Control:
+	cancel_charge()
 	if is_instance_valid(overlay): overlay.free()
 	overlay = panel(Vector2(365,225),Vector2(550,340))
 	var content := Control.new()
