@@ -8,7 +8,7 @@ Open `project.godot` in Godot 4.3 or newer (verified in Godot 4.7.2), then press
 
 - **Left click** an empty tile: walk along a calculated path.
 - **Hold right click** toward a crop to charge, then **release** to throw. The dotted line appears only while charging and grows to the current range over 0.9 seconds. A quick tap throws one tile; a full charge uses the entire upgraded range. The scythe returns automatically; throws are unlimited. Releasing outside the game view, pausing, or switching away from the window cancels charging.
-- Harvest **every wheat and carrot** to open the eastern edge tile marked with an arrow. Walk onto it to enter the next screen. The western middle edge goes back.
+- The eastern edge tile marked with an arrow is always available to enter the next screen. The western middle edge goes back; unharvested crops remain when a field is revisited.
 - Rocks block movement and throws until the appropriate breaking upgrade is installed. Scythes fly across gaps; the Jumping upgrade lets the bunny cross one void tile. Crops block walking until harvested.
 - Step on a **gold switch** to open a bridge.
 - Each crop adds **1** to its separate icon counter. Greenhouses offer five upgrades: **Break Rock Level 1** (ordinary rock), **Break Titanium Level 2**, two **Scythe Reach** levels (+1 tile each), and **Jumping** across one void tile. Carrots buy breaking upgrades; wheat buys reach and jumping.
