@@ -18,6 +18,9 @@ const MUSIC_MENU_VOLUME_DB := -18.0
 const HARVEST_ICON_SIZE := Vector2(34,34)
 const HUD_INVENTORY_TARGETS := {"w": Vector2(1003,58), "c": Vector2(1134,58), "t": Vector2(1134,116)}
 const RESOURCE_ICON_NAMES := {"w":"wheat", "c":"carrot", "t":"titanium"}
+const SHOP_BASE := "res://Imported/PNG/Jefferson/Shop-ShopBase.webp"
+const SHOP_BUTTON_SIZE := Vector2(370,108)
+const SHOP_BUTTON_PATH := "res://Imported/PNG/Jefferson/Shop-"
 const W := 11
 const H := 9
 const MINT := Color("a6e6c7")
@@ -93,7 +96,7 @@ var wheat_total: Label
 var carrot_total: Label
 var titanium_icon: TextureRect
 var titanium_total: Label
-var shop_panel: PanelContainer
+var shop_panel: Control
 var shop_closed_for_visit := false
 var overlay: PanelContainer
 var hover: MeshInstance3D
@@ -564,6 +567,62 @@ func menu_button(
 	b.pressed.connect(callback)
 	parent.add_child(b)
 	return b
+
+func shop_button(
+	asset_name: String,
+	pos: Vector2,
+	cost: int,
+	sold_out: bool,
+	callback: Callable,
+	parent: Control,
+	title_override: String = ""
+) -> TextureButton:
+	var b := TextureButton.new()
+	b.texture_normal = load(SHOP_BUTTON_PATH+asset_name+".webp")
+	b.texture_hover = load(SHOP_BUTTON_PATH+asset_name+"Click.webp")
+	b.texture_pressed = load(SHOP_BUTTON_PATH+asset_name+"Click.webp")
+	b.texture_disabled = load(SHOP_BUTTON_PATH+asset_name+"Sold.webp")
+	b.position = pos
+	b.size = SHOP_BUTTON_SIZE
+	b.ignore_texture_size = true
+	b.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	b.disabled = sold_out
+	b.pressed.connect(callback)
+	parent.add_child(b)
+	if not sold_out:
+		var price := label_at(str(cost),pos+Vector2(265,36),20,WHITE,parent)
+		price.size = Vector2(42,32)
+		price.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		price.add_theme_color_override("font_outline_color",Color("172025"))
+		price.add_theme_constant_override("outline_size",4)
+		if instruction_font:
+			price.add_theme_font_override("font",instruction_font)
+	if not title_override.is_empty():
+		var title_backing := ColorRect.new()
+		title_backing.color = Color("202427")
+		title_backing.position = pos+Vector2(11,21)
+		title_backing.size = Vector2(226,65)
+		title_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		parent.add_child(title_backing)
+		var title := label_at(title_override,pos+Vector2(18,35),27,WHITE,parent)
+		title.add_theme_color_override("font_outline_color",Color("0a0b0c"))
+		title.add_theme_constant_override("outline_size",5)
+		if instruction_font:
+			title.add_theme_font_override("font",instruction_font)
+	return b
+
+func shop_close_button(parent: Control) -> TextureButton:
+	var close := TextureButton.new()
+	close.texture_normal = load(SHOP_BUTTON_PATH+"ExitButton.webp")
+	close.texture_hover = load(SHOP_BUTTON_PATH+"ExitButtonClicked.webp")
+	close.texture_pressed = load(SHOP_BUTTON_PATH+"ExitButtonClicked.webp")
+	close.position = Vector2(821,12)
+	close.size = Vector2(128,128)
+	close.ignore_texture_size = true
+	close.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	close.pressed.connect(dismiss_shop)
+	parent.add_child(close)
+	return close
 
 func show_title() -> void:
 	cancel_charge()
@@ -1172,31 +1231,26 @@ func reset_field() -> void:
 func show_shop() -> void:
 	if not is_shop(): return
 	if is_instance_valid(shop_panel): shop_panel.free()
-	shop_panel = panel(Vector2(335,190),Vector2(610,400))
+	shop_panel = Control.new()
+	shop_panel.position = Vector2(158,72)
+	shop_panel.size = Vector2(963,656)
+	ui.add_child(shop_panel)
+	var base := menu_image(SHOP_BASE,Vector2.ZERO,shop_panel.size,shop_panel)
+	base.stretch_mode = TextureRect.STRETCH_SCALE
 	var content := Control.new()
-	content.custom_minimum_size = Vector2(610,400)
+	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.mouse_filter = Control.MOUSE_FILTER_PASS
 	shop_panel.add_child(content)
-	label_at("THE GREENHOUSE EXCHANGE",Vector2(20,14),12,MINT,content)
-	button("Close",Vector2(535,10),Vector2(60,28),dismiss_shop,content)
+	shop_close_button(content)
 	match shop_number():
 		1:
-			shop_upgrade_row(content,92,"Break Rock  ·  Level 1","Shatter ordinary stone",8,"c",rock_break_level >= 1,func(): buy_break_upgrade(1))
-			shop_upgrade_row(content,188,"Scythe Reach  ·  Level 1","+1 tile throwing distance",10,"w",reach_level >= 1,func(): buy_reach_upgrade(1))
+			shop_button("BreakTitanium",Vector2(520,184),8,rock_break_level >= 1 or harvest.c < 8,func(): buy_break_upgrade(1),content)
+			shop_button("ScytheReach",Vector2(520,364),10,reach_level >= 1 or harvest.w < 10,func(): buy_reach_upgrade(1),content)
 		2:
-			shop_upgrade_row(content,92,"Break Titanium  ·  Level 2","Shatter titanium stone",16,"c",rock_break_level >= 2,func(): buy_break_upgrade(2))
-			shop_upgrade_row(content,188,"Scythe Reach  ·  Level 2","+1 tile throwing distance",20,"w",reach_level >= 2,func(): buy_reach_upgrade(2))
+			shop_button("BreakTitanium",Vector2(520,184),16,rock_break_level >= 2 or harvest.c < 16,func(): buy_break_upgrade(2),content)
+			shop_button("ScytheReach",Vector2(520,364),20,reach_level >= 2 or harvest.w < 20,func(): buy_reach_upgrade(2),content)
 		3:
-			shop_upgrade_row(content,140,"Jumping","Cross one void tile",50,"t",jump_unlocked,buy_jump_upgrade)
-
-func shop_upgrade_row(content: Control, y: float, title: String, detail: String, cost: int, resource: String, installed: bool, action: Callable) -> void:
-	label_at(title,Vector2(20,y),18,WHITE,content)
-	label_at(detail,Vector2(20,y+24),12,MUTED,content)
-	var purchase := button("Installed" if installed else "%d   /   Upgrade" % cost,Vector2(370,y+7),Vector2(220,36),action,content)
-	var icon_name: String = RESOURCE_ICON_NAMES[resource]
-	purchase.icon = load("res://assets/icons/"+icon_name+".png")
-	purchase.expand_icon = true
-	purchase.add_theme_constant_override("icon_max_width",24)
-	purchase.disabled = installed or harvest[resource] < cost
+			shop_button("Jump",Vector2(520,274),50,jump_unlocked or harvest.t < 50,buy_jump_upgrade,content)
 
 func buy_break_upgrade(level: int) -> void:
 	var cost := 8*level
