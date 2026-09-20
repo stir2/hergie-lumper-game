@@ -994,7 +994,10 @@ func update_aim() -> void:
 		if tiles.has(c):
 			hover.visible = true
 			hover.position = grid_pos(c)+Vector3(0,0.015,0)
-			hover.material_override = material(MINT if walkable(c) else GOLD)
+			var hover_color: Color = MINT if walkable(c) else GOLD
+			hover_color.a = 0.5
+			var hover_material := hover.material_override as StandardMaterial3D
+			hover_material.albedo_color = hover_color
 	if not charging or shot_active: return
 	var direction := charge_target-bunny.position
 	direction.y = 0
