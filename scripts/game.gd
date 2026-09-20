@@ -44,6 +44,8 @@ var scenery_blockers: Dictionary = {}
 var floor_materials: Dictionary = {}
 var tile_nodes: Dictionary = {}
 var crop_nodes: Dictionary = {}
+var shop_tiles: Dictionary = {}
+var shop_marker_materials: Dictionary = {}
 var path: Array[Vector2i] = []
 var cell := Vector2i(0,4)
 var hop_active := false
@@ -502,7 +504,44 @@ func nearest_cell(pos: Vector3) -> Vector2i:
 	return Vector2i(clampi(roundi(pos.x)+5,0,W-1),clampi(roundi(pos.z)+4,0,H-1))
 
 func is_shop() -> bool:
-	return current_level.shop
+	return shop_tiles.has(cell)
+
+func has_shop() -> bool:
+	return not shop_tiles.is_empty()
+
+func can_afford_any_upgrade() -> bool:
+	return (rock_break_level < 2 and harvest.c >= 8*(rock_break_level+1)) \
+		or (reach_level < 2 and harvest.w >= 10*(reach_level+1)) \
+		or (not jump_unlocked and harvest.w >= 15)
+
+func make_shop_marker(c: Vector2i) -> void:
+	var overlay := MeshInstance3D.new()
+	overlay.name = "ShopOverlay"
+	var mesh := PlaneMesh.new()
+	mesh.size = Vector2(0.84,0.84)
+	overlay.mesh = mesh
+	var overlay_material := material(MINT,0.0)
+	overlay_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	overlay_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	overlay_material.render_priority = 1
+	overlay.material_override = overlay_material
+	overlay.position = grid_pos(c)+Vector3(0,0.025,0)
+	board.add_child(overlay)
+	shop_marker_materials[c] = overlay_material
+
+func update_shop_markers() -> void:
+	var affordable := can_afford_any_upgrade()
+	var pulse := 0.5 + 0.5 * sin(time*4.0)
+	for marker_material in shop_marker_materials.values():
+		var m := marker_material as StandardMaterial3D
+		var overlay_color := MINT
+		overlay_color.a = pulse if affordable else 1.0
+		m.albedo_color = overlay_color
+
+func close_shop() -> void:
+	if is_instance_valid(shop_panel):
+		shop_panel.free()
+		shop_panel = null
 
 func save_stage() -> void:
 	states[stage] = {"crops":crops.duplicate(true),"bridge":bridge_open}
@@ -520,13 +559,15 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	scenery_blockers.clear()
 	tile_nodes.clear()
 	crop_nodes.clear()
+	shop_tiles.clear()
+	shop_marker_materials.clear()
 	path.clear()
 	shot_active = false
 	scythe.visible = false
 	held.visible = true
 	throw_audio.stop()
 	bridge_open = false
-	if is_instance_valid(shop_panel): shop_panel.queue_free()
+	close_shop()
 	current_level = LEVELS[stage].instantiate()
 	board.add_child(current_level)
 	for z in H:
@@ -550,6 +591,9 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	for decoration in current_level.decorations():
 		asset(board,decoration.asset,grid_pos(decoration.cell),decoration.size)
 		if decoration.blocks: scenery_blockers[decoration.cell] = true
+	for shop_cell in current_level.shop_cells():
+		shop_tiles[shop_cell] = true
+		make_shop_marker(shop_cell)
 	for c in crops:
 		var crop_kind: String = crops[c].kind
 		var file := "WheatFull" if crop_kind.to_lower() == "w" else "Carrot3"
@@ -575,14 +619,13 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	bunny.position = grid_pos(cell)
 	bunny_model.rotation = Vector3(0, BUNNY_ROTATION_OFFSET, 0)
 	transition_lock = 0.6
-	if is_shop():
+	if has_shop() and current_level.shop:
 		asset(board,"res://Meshes/Kevin/Greenhouse.tres",Vector3(0,0,-2),3.7)
 		for x in range(3,8):
 			for z in [0,7]:
 				asset(board,"res://Meshes/Jefferson/WheatFull.tres",grid_pos(Vector2i(x,z)),0.72)
 		for x in range(4,7):
 			for z in range(1,4): rocks[Vector2i(x,z)] = "normal"
-		show_shop()
 	update_ui()
 
 func update_ui() -> void:
@@ -590,6 +633,7 @@ func update_ui() -> void:
 	carrot_total.text = str(harvest.c)
 	equipment.text = "Break  %d / 2     Reach  +%d     Jump  %s" % [rock_break_level,reach_level,"ON" if jump_unlocked else "OFF"]
 	gate.material_override = material(MINT,0.5)
+	update_shop_markers()
 
 func walkable(c: Vector2i) -> bool:
 	return tiles.has(c) and not rocks.has(c) and not crops.has(c) and not scenery_blockers.has(c)
@@ -795,6 +839,7 @@ func hit_crop(c: Vector2i) -> void:
 func _process(dt: float) -> void:
 	time += dt
 	update_background_ruins(dt)
+	update_shop_markers()
 	if title_active: return
 	if is_instance_valid(overlay): return
 	transition_lock = maxf(0,transition_lock-dt)
@@ -842,6 +887,10 @@ func _process(dt: float) -> void:
 				look_direction.y = 0
 				if look_direction.length_squared() > 0.01:
 					bunny_model.rotation.y = lerp_angle(bunny_model.rotation.y,atan2(look_direction.x,look_direction.z) + BUNNY_ROTATION_OFFSET,dt*14)
+	if is_shop():
+		if not is_instance_valid(shop_panel): show_shop()
+	elif is_instance_valid(shop_panel):
+		close_shop()
 	if transition_lock == 0 and path.is_empty() and not shot_active and not charging:
 		if cell == Vector2i(10,4):
 			next_stage()
@@ -968,7 +1017,8 @@ func reset_field() -> void:
 	load_stage(stage)
 
 func show_shop() -> void:
-	if is_instance_valid(shop_panel): shop_panel.queue_free()
+	if not is_shop(): return
+	if is_instance_valid(shop_panel): shop_panel.free()
 	shop_panel = panel(Vector2(335,190),Vector2(610,400))
 	var content := Control.new()
 	content.custom_minimum_size = Vector2(610,400)
@@ -1069,7 +1119,11 @@ func smoke_test() -> void:
 	assert(rock_break_level == 0 and reach_level == 0 and not jump_unlocked and harvest.w == 0 and harvest.c == 0,"Unaffordable purchases preserve inventory")
 	for index in LEVELS.size():
 		load_stage(index)
-		if is_shop():
+		if has_shop():
+			cell = shop_tiles.keys()[0]
+			bunny.position = grid_pos(cell)
+			show_shop()
+			assert(is_instance_valid(shop_panel),"Shop opens only after reaching a shop tile")
 			harvest = {"w":1000,"c":1000}
 			var before := rock_break_level
 			if rock_break_level < 2:

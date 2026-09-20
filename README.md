@@ -11,7 +11,7 @@ Open `project.godot` in Godot 4.3 or newer (verified in Godot 4.7.2), then press
 - The eastern edge tile marked with an arrow is always available to enter the next screen. The western middle edge goes back; unharvested crops remain when a field is revisited.
 - Rocks block movement and throws until the appropriate breaking upgrade is installed. Scythes fly across gaps; the Jumping upgrade lets the bunny cross one void tile. Crops block walking until harvested.
 - Step on a **gold switch** to open a bridge.
-- Each crop adds **1** to its separate icon counter. Greenhouses offer five upgrades: **Break Rock Level 1** (ordinary rock), **Break Titanium Level 2**, two **Scythe Reach** levels (+1 tile each), and **Jumping** across one void tile. Carrots buy breaking upgrades; wheat buys reach and jumping.
+- Each crop adds **1** to its separate icon counter. Step onto a **Shop** tile to open the exchange; its beacon flashes green whenever either crop can afford a remaining upgrade. The five upgrades are **Break Rock Level 1** (ordinary rock), **Break Titanium Level 2**, two **Scythe Reach** levels (+1 tile each), and **Jumping** across one void tile. Carrots buy breaking upgrades; wheat buys reach and jumping.
 - Amber wheat takes 2 hits; reinforced carrots take 3. Repeated throws work with the starter blade, so upgrades are helpful but never required for crops.
 - **R:** reset the current unsaved field, reversing its harvest rewards. Saved fields keep their collected crops.
 - **Esc:** pause. **M:** mute. **F11:** fullscreen.

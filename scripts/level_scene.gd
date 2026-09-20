@@ -5,9 +5,11 @@ extends Node3D
 @export_category("Identity")
 @export var display_name := "Untitled field"
 @export var region := ""
+# Kept for the two existing greenhouse scenes. New levels should paint a Shop
+# tile in the GridMap instead; this fallback creates one at the board centre.
 @export var shop := false
 
-enum Tile { FLOOR, VOID, ROCK, SWITCH, BRIDGE, WHEAT, TOUGH_WHEAT, CARROT, TOUGH_CARROT, TITANIUM_ROCK }
+enum Tile { FLOOR, VOID, ROCK, SWITCH, BRIDGE, WHEAT, TOUGH_WHEAT, CARROT, TOUGH_CARROT, TITANIUM_ROCK, SHOP = 18 }
 
 const TILE_KINDS := {
 	Tile.FLOOR: ".",
@@ -19,7 +21,8 @@ const TILE_KINDS := {
 	Tile.TOUGH_WHEAT: "W",
 	Tile.CARROT: "c",
 	Tile.TOUGH_CARROT: "C",
-	Tile.TITANIUM_ROCK: "t"
+	Tile.TITANIUM_ROCK: "t",
+	Tile.SHOP: "h"
 }
 
 const DECORATION_ASSETS := {
@@ -56,6 +59,13 @@ func crop_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	for tile in [Tile.WHEAT, Tile.TOUGH_WHEAT, Tile.CARROT, Tile.TOUGH_CARROT]:
 		cells.append_array(cells_in(tile))
+	return cells
+
+func shop_cells() -> Array[Vector2i]:
+	var cells := cells_in(Tile.SHOP)
+	# Compatibility for levels authored before Shop was available in the tile palette.
+	if cells.is_empty() and shop:
+		cells.append(Vector2i(5,4))
 	return cells
 
 func decorations() -> Array[Dictionary]:
