@@ -30,6 +30,16 @@ const LEVELS := [
 	preload("res://scenes/levels/04_bridge_of_stars.tscn"),
 	preload("res://scenes/levels/05_wandering_nursery.tscn"),
 	preload("res://scenes/levels/06_lunar_labyrinth.tscn"),
+	preload("res://scenes/levels/08_empty_field_01.tscn"),
+	preload("res://scenes/levels/09_empty_field_02.tscn"),
+	preload("res://scenes/levels/10_empty_field_03.tscn"),
+	preload("res://scenes/levels/11_empty_field_04.tscn"),
+	preload("res://scenes/levels/12_empty_field_05.tscn"),
+	preload("res://scenes/levels/13_empty_field_06.tscn"),
+	preload("res://scenes/levels/14_empty_field_07.tscn"),
+	preload("res://scenes/levels/15_empty_field_08.tscn"),
+	preload("res://scenes/levels/16_empty_field_09.tscn"),
+	preload("res://scenes/levels/17_empty_field_10.tscn"),
 	preload("res://scenes/levels/07_last_constellation.tscn")
 ]
 
@@ -1254,7 +1264,7 @@ func smoke_test() -> void:
 			if not jump_unlocked:
 				buy_jump_upgrade()
 			continue
-		if index in [4,7]:
+		if index in [4,17]:
 			assert(not tiles.has(Vector2i(5,4)),"Bridge starts closed")
 			assert(not find_path(cell,Vector2i(2,4)).is_empty(),"Switch reachable")
 			open_bridge()

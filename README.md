@@ -16,7 +16,7 @@ Open `project.godot` in Godot 4.3 or newer (verified in Godot 4.7.2), then press
 - **R:** reset the current unsaved field, reversing its harvest rewards. Saved fields keep their collected crops.
 - **Esc:** pause. **M:** mute. **F11:** fullscreen.
 
-Six harvest puzzles and two greenhouse waystations form an eight-screen journey with a completion screen and replay. Harvest, bridge state, upgrades, and crop inventories persist across screen changes **for the current session**; closing the game starts a new run.
+Six harvest puzzles, two greenhouse waystations, and ten empty placeholder fields form an eighteen-screen journey with a completion screen and replay. Harvest, bridge state, upgrades, and crop inventories persist across screen changes **for the current session**; closing the game starts a new run.
 
 ## Checks
 

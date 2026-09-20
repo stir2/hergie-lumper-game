@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level_scene.gd" id="1"]
+[ext_resource type="MeshLibrary" path="res://scenes/levels/level_tiles.tres" id="2"]
+
+[node name="EmptyField08" type="Node3D"]
+script = ExtResource("1")
+display_name = "Uncharted field 08"
+region = "THE OUTER ORBIT"
+
+[node name="Layout" type="GridMap" parent="."]
+mesh_library = ExtResource("2")
+cell_size = Vector3(1, 1, 1)
+data = {"cells": PackedInt32Array(65531, 0, 0, 65532, 0, 0, 65533, 0, 0, 65534, 0, 0, 65535, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0, 4, 0, 0, 5, 0, 0)}
