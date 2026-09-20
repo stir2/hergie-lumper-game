@@ -1,4 +1,4 @@
-# Orbit & Harvest
+# Hergie Lumper
 
 A complete, small Godot 4 game about a bunny harvesting floating space gardens with a returning scythe. Built with the supplied `jam-collegiate` bunny, crop, rock, greenhouse, scythe, texture, and sound assets. Assets are copied into this project; the original folder is untouched.
 

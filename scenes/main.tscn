@@ -2,5 +2,5 @@
 
 [ext_resource type="Script" uid="uid://cvrw7ydalxl3o" path="res://scripts/game.gd" id="1"]
 
-[node name="OrbitAndHarvest" type="Node" unique_id=364962456]
+[node name="HergieLumper" type="Node" unique_id=364962456]
 script = ExtResource("1")
