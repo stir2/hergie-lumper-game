@@ -164,15 +164,17 @@ func floor_tile(c: Vector2i, kind: String) -> MeshInstance3D:
 func asset(parent: Node3D, file: String, pos: Vector3, target_size: float) -> MeshInstance3D:
 	var n := MeshInstance3D.new()
 	n.mesh = load(file)
-	if "Wheat" in file:
+	var wheat_mesh := "Wheat" in file
+	if wheat_mesh:
 		n.material_override = material(Color("d7b354"))
 	if "Greenhouse.tres" in file:
 		n.material_override = load("res://Materials/Atlas1.tres")
 	var bounds := n.mesh.get_aabb()
 	var factor := target_size / maxf(bounds.size.x,maxf(bounds.size.y,bounds.size.z))
 	n.scale = Vector3.ONE * factor
+	if wheat_mesh: n.rotation.y = -PI/2
 	parent.add_child(n)
-	n.position = pos - Vector3(bounds.get_center().x,bounds.position.y,bounds.get_center().z)*factor
+	n.position = pos - n.basis*Vector3(bounds.get_center().x,bounds.position.y,bounds.get_center().z)
 	return n
 
 func build_world() -> void:
