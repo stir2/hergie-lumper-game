@@ -696,11 +696,11 @@ func update_shop_number() -> void:
 func can_afford_any_upgrade() -> bool:
 	match shop_number():
 		1:
-			return (rock_break_level < 1 and harvest.c >= 8) or (reach_level < 1 and harvest.w >= 10)
+			return (rock_break_level < 1 and harvest.c >= 15) or (reach_level < 1 and harvest.w >= 30)
 		2:
-			return (rock_break_level < 2 and harvest.c >= 16) or (reach_level < 2 and harvest.w >= 20)
+			return (rock_break_level < 2 and harvest.c >= 25) or (reach_level < 2 and harvest.w >= 50)
 		3:
-			return not jump_unlocked and harvest.t >= 50
+			return not jump_unlocked and harvest.t >= 35
 	return false
 
 func make_shop_marker(c: Vector2i) -> void:
@@ -1243,16 +1243,16 @@ func show_shop() -> void:
 	shop_close_button(content)
 	match shop_number():
 		1:
-			shop_button("BreakTitanium",Vector2(520,184),8,rock_break_level >= 1 or harvest.c < 8,func(): buy_break_upgrade(1),content)
-			shop_button("ScytheReach",Vector2(520,364),10,reach_level >= 1 or harvest.w < 10,func(): buy_reach_upgrade(1),content)
+			shop_button("BreakTitanium",Vector2(520,184),15,rock_break_level >= 1 or harvest.c < 15,func(): buy_break_upgrade(1),content)
+			shop_button("ScytheReach",Vector2(520,364),30,reach_level >= 1 or harvest.w < 30,func(): buy_reach_upgrade(1),content)
 		2:
-			shop_button("BreakTitanium",Vector2(520,184),16,rock_break_level >= 2 or harvest.c < 16,func(): buy_break_upgrade(2),content)
-			shop_button("ScytheReach",Vector2(520,364),20,reach_level >= 2 or harvest.w < 20,func(): buy_reach_upgrade(2),content)
+			shop_button("BreakTitanium",Vector2(520,184),25,rock_break_level >= 2 or harvest.c < 25,func(): buy_break_upgrade(2),content)
+			shop_button("ScytheReach",Vector2(520,364),50,reach_level >= 2 or harvest.w < 50,func(): buy_reach_upgrade(2),content)
 		3:
-			shop_button("Jump",Vector2(520,274),50,jump_unlocked or harvest.t < 50,buy_jump_upgrade,content)
+			shop_button("Jump",Vector2(520,274),35,jump_unlocked or harvest.t < 35,buy_jump_upgrade,content)
 
 func buy_break_upgrade(level: int) -> void:
-	var cost := 8*level
+	var cost := 15 if level == 1 else 25
 	if level != rock_break_level+1 or harvest.c < cost: return
 	harvest.c -= cost
 	rock_break_level = level
@@ -1260,7 +1260,7 @@ func buy_break_upgrade(level: int) -> void:
 	show_shop()
 
 func buy_reach_upgrade(level: int) -> void:
-	var cost := 10*level
+	var cost := 30 if level == 1 else 50
 	if level != reach_level+1 or harvest.w < cost: return
 	harvest.w -= cost
 	reach_level = level
@@ -1268,8 +1268,8 @@ func buy_reach_upgrade(level: int) -> void:
 	show_shop()
 
 func buy_jump_upgrade() -> void:
-	if jump_unlocked or harvest.t < 50: return
-	harvest.t -= 50
+	if jump_unlocked or harvest.t < 35: return
+	harvest.t -= 35
 	jump_unlocked = true
 	update_ui()
 	show_shop()

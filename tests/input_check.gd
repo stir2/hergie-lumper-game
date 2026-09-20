@@ -96,16 +96,16 @@ func run() -> void:
 	await click_tile(Vector2i(0,4))
 	await get_tree().create_timer(0.8).timeout
 	check(game.stage == 0 and game.crops.is_empty(),"West edge returns to persisted field")
-	game.harvest = {"w":16,"c":16}
+game.harvest = {"w":30,"c":15}
 	game.load_stage(2)
 	await get_tree().create_timer(0.3).timeout
 	await screenshot("screenshot-greenhouse.png")
 	await click(Vector2(550,627),MOUSE_BUTTON_LEFT)
 	await get_tree().create_timer(0.2).timeout
-	check(game.power == 2 and game.harvest.c == 8 and game.harvest.w == 16,"Power upgrade spends only carrots")
+check(game.power == 2 and game.harvest.c == 0 and game.harvest.w == 30,"Power upgrade spends only carrots")
 	await click(Vector2(900,627),MOUSE_BUTTON_LEFT)
 	await get_tree().create_timer(0.2).timeout
-	check(game.reach == 4 and game.harvest.w == 6 and game.harvest.c == 8,"Range upgrade spends only wheat")
+check(game.reach == 4 and game.harvest.w == 0 and game.harvest.c == 0,"Range upgrade spends only wheat")
 	await click_tile(Vector2i(10,4))
 	await get_tree().create_timer(2.5).timeout
 	check(game.stage == 3,"Greenhouse gate remains clickable below shop UI")
