@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://Imported/PNG/Kevin/BrickTrim.png" id="1_njsu1"]
+
+[resource]
+albedo_texture = ExtResource("1_njsu1")
+texture_filter = 0

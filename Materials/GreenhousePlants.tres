@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://Imported/PNG/Kevin/Greenhouse Plants.png" id="1_d7o36"]
+
+[resource]
+transparency = 1
+albedo_texture = ExtResource("1_d7o36")
+texture_filter = 0

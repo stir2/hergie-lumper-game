@@ -1,0 +1,33 @@
+[gd_resource type="ArrayMesh" format=4]
+
+[ext_resource type="Material" path="res://Materials/ConcreteTrim2.tres" id="1_8hfx4"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_8hfx4"]
+_surfaces = [{
+"aabb": AABB(-0.09599972, -0.73366827, -0.09599972, 0.19199944, 1.4673367, 0.19199944),
+"format": 34896613377,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAACAAEAAwAEAAEABQAAAAIAAwAAAAUABAAGAAIABQACAAYAAwAHAAQAAwAFAAcABwAGAAQABwAFAAYA"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("AAAAAP//AAAAAP//AAAAAAAA/////wAAAAAAAAAAAAD/////AAAAAP//AAD//wAA////////AAD//wAAAAAAAA==")
+}]
+blend_shape_mode = 0
+
+[resource]
+resource_name = "ConcretePillar1_Cube_313"
+_surfaces = [{
+"aabb": AABB(-0.09599972, -0.73366827, -0.09599972, 0.19199944, 1.4673367, 0.19199944),
+"attribute_data": PackedByteArray("Clz63alNF3AKXBdwqU363UVcmd7ZTWVwRVxlcNlNmd6pTfrdClwXcKlNF3AKXPrdtFuZ3klNZXC0W2VwSU2Z3qlNF3AKXBdwqU0XcApcF3CpTfrdClz63alN+t0KXPrd"),
+"format": 34896613399,
+"index_count": 36,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAAFAAYABAAHAAUACAAJAAoACAALAAkADAANAA4ADAAPAA0AEAARABIAEAATABEAFAAVABYAFAAXABUA"),
+"material": ExtResource("1_8hfx4"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("AAAAAP///78AAP//AAD/vwAA//////+/AAAAAAAA/78AAAAAAAD///////8AAP//AAD//wAA/////wAAAAD/////AAAAAAAA////////AAD/////AAAAAP//AAD//wAA//8AAP//AIAAAP////8AgP///////wCAAAAAAP//AID/////AAD/vwAA//////+/AAD//wAA/7//////////vwAAAAAAAP+///8AAP///7///wAAAAD/vwAAAAD///+//3////9/////f////3////9/////f////3////9/////v/9//7//f/+//3//v/9//3////9/////f////3///////3////9/////f////38AAP9/AAD/fwAA/38AAP9/")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_8hfx4")
