@@ -535,7 +535,7 @@ func update_shop_markers() -> void:
 	for marker_material in shop_marker_materials.values():
 		var m := marker_material as StandardMaterial3D
 		var overlay_color := MINT
-		overlay_color.a = pulse if affordable else 1.0
+		overlay_color.a = pulse if affordable else 0.0
 		m.albedo_color = overlay_color
 
 func close_shop() -> void:
