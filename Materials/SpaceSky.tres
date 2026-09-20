@@ -1,0 +1,9 @@
+[gd_resource type="Sky" load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/panorama_image.webp" id="1_panorama"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_space"]
+panorama = ExtResource("1_panorama")
+
+[resource]
+sky_material = SubResource("PanoramaSkyMaterial_space")
