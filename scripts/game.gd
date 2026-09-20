@@ -639,6 +639,9 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	transition_lock = 0.6
 	if has_shop() and current_level.shop:
 		asset(board,"res://Meshes/Kevin/Greenhouse.tres",Vector3(0,0,-2),3.7)
+		for x in range(4,7):
+			for z in range(1,4):
+				scenery_blockers[Vector2i(x,z)] = true
 	update_ui()
 
 func update_ui() -> void:
