@@ -1,9 +1,9 @@
 extends SubViewportContainer
 
 const RENDER_SCALE := 2.0
-const DRIFT_DEGREES_PER_SECOND := 0.5
-const PITCH_DEGREES_PER_SECOND := 0.22
-const SKY_BRIGHTNESS := 1.45
+const DRIFT_DEGREES_PER_SECOND := 0.4
+const PITCH_DEGREES_PER_SECOND := 0.7
+const SKY_BRIGHTNESS := 3
 var sky_camera: Camera3D
 
 # Render the panorama as a sky behind the transparent orthographic game view.
