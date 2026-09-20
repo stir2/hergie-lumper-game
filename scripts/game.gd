@@ -281,8 +281,11 @@ func make_scythe(pivot_at_handle: bool = false) -> Node3D:
 	# Offset the held mesh so its handle, rather than its imported center, is the pivot.
 	if pivot_at_handle:
 		model.position.x = -0.20
+	var scythe_material := load("res://Materials/Atlas1.tres") as StandardMaterial3D
+	if model is MeshInstance3D:
+		(model as MeshInstance3D).material_override = scythe_material
 	for child in model.find_children("*", "MeshInstance3D"):
-		child.material_override = material(Color("b9dfd0"),0.1)
+		child.material_override = scythe_material
 	return root
 
 func floating_ruin(file: String, pos: Vector3, target_size: float, orientation: Vector3, spin: Vector3, drift: Vector3, phase: float) -> void:
@@ -315,7 +318,7 @@ func build_background_ruins() -> void:
 	floating_ruin("res://Meshes/Kevin/BrickBuilding1.tres",Vector3(9.6,-3.2,-8.4),0.76,Vector3(-41,13,38),Vector3(-0.09,0.07,-0.06),Vector3(-0.38,0.17,-0.22),5.5)
 	floating_ruin("res://Meshes/Kevin/ConcretePillar1.tres",Vector3(-6.8,-3.4,2.8),0.58,Vector3(73,-24,19),Vector3(0.11,0.04,-0.07),Vector3(0.16,-0.26,0.27),1.5)
 	floating_ruin("res://Meshes/Kevin/BrickPillar1.tres",Vector3(10.8,-3.5,0.2),0.62,Vector3(-19,47,56),Vector3(-0.05,0.10,0.08),Vector3(-0.24,0.21,0.14),2.1)
-	floating_ruin("res://Meshes/Jefferson/RockTitanium1.tres",Vector3(-3.8,-3.6,-10.6),0.50,Vector3(34,-48,-22),Vector3(0.07,-0.08,0.09),Vector3(0.30,0.14,-0.18),3.3)
+	floating_ruin("res://Meshes/Jefferson/RockTitanium3.tres",Vector3(-3.8,-3.6,-10.6),0.50,Vector3(34,-48,-22),Vector3(0.07,-0.08,0.09),Vector3(0.30,0.14,-0.18),3.3)
 	floating_ruin("res://Meshes/Jefferson/RockPlain2.tres",Vector3(5.5,-3.8,-10.2),0.42,Vector3(-62,21,44),Vector3(-0.10,0.05,-0.04),Vector3(-0.16,0.29,0.24),4.9)
 	# Lower, farther pieces keep the void around the near edge from feeling empty.
 	floating_ruin("res://Meshes/Kevin/ConcreteBuilding1.tres",Vector3(-10.8,-5.0,-3.4),1.08,Vector3(48,-37,29),Vector3(0.06,0.09,-0.05),Vector3(0.31,0.22,0.18),0.6)
@@ -323,7 +326,7 @@ func build_background_ruins() -> void:
 	floating_ruin("res://Meshes/Kevin/ConcretePillar2.tres",Vector3(-9.8,-5.7,-0.3),0.62,Vector3(71,12,-39),Vector3(0.10,-0.07,0.06),Vector3(0.22,-0.18,0.29),2.7)
 	floating_ruin("res://Meshes/Jefferson/Debris2.tres",Vector3(-5.1,-6.5,-6.5),0.72,Vector3(24,58,-36),Vector3(-0.06,0.11,-0.08),Vector3(-0.34,0.24,0.20),3.6)
 	floating_ruin("res://Meshes/Jefferson/ConcreteDebris.tres",Vector3(-11.8,-5.8,1.8),0.56,Vector3(-47,19,63),Vector3(0.09,0.05,0.07),Vector3(0.17,0.27,-0.25),4.4)
-	floating_ruin("res://Meshes/Jefferson/RockTitanium1.tres",Vector3(-7.2,-5.5,2.4),0.48,Vector3(39,-52,18),Vector3(-0.07,0.08,-0.09),Vector3(-0.21,0.16,0.33),5.2)
+	floating_ruin("res://Meshes/Jefferson/RockTitanium3.tres",Vector3(-7.2,-5.5,2.4),0.48,Vector3(39,-52,18),Vector3(-0.07,0.08,-0.09),Vector3(-0.21,0.16,0.33),5.2)
 	floating_ruin("res://Meshes/Jefferson/RockPlain3.tres",Vector3(-2.4,-7.0,-8.3),0.52,Vector3(-56,34,27),Vector3(0.08,-0.06,0.05),Vector3(0.29,0.20,-0.17),1.3)
 	floating_ruin("res://Meshes/Kevin/Railing1.tres",Vector3(2.8,-6.2,-8.6),0.50,Vector3(62,-29,45),Vector3(-0.10,0.07,0.04),Vector3(-0.18,0.32,0.21),2.4)
 
