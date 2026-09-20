@@ -1,4 +1,4 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://6hckouhav86l"]
 
 [ext_resource type="Material" path="res://Materials/GreenhousePlants.tres" id="1_4jrwf"]
 

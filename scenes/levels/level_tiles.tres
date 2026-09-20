@@ -15,7 +15,7 @@
 [ext_resource type="ArrayMesh" uid="uid://dp85cw00086kj" path="res://Meshes/Jefferson/WheatFull.tres" id="13_ymjxq"]
 [ext_resource type="ArrayMesh" uid="uid://k41s042qu5hi" path="res://Meshes/Jefferson/Carrot3.tres" id="14_b55xb"]
 [ext_resource type="ArrayMesh" uid="uid://dp0oh10wa3v8y" path="res://Meshes/Jefferson/RockTitanium3.tres" id="15_dx2lc"]
-[ext_resource type="ArrayMesh" path="res://Meshes/Kevin/GreenhouseBush1.tres" id="16_shop"]
+[ext_resource type="ArrayMesh" uid="uid://6hckouhav86l" path="res://Meshes/Kevin/GreenhouseBush1.tres" id="16_shop"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0y22l"]
 shading_mode = 0
