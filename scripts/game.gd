@@ -14,7 +14,8 @@ const BUNNY_ROTATION_OFFSET := -PI / 2.0
 const MUSIC_GAMEPLAY_VOLUME_DB := -14.0
 const MUSIC_MENU_VOLUME_DB := -18.0
 const HARVEST_ICON_SIZE := Vector2(34,34)
-const HUD_INVENTORY_TARGETS := {"w": Vector2(1003,58), "c": Vector2(1134,58)}
+const HUD_INVENTORY_TARGETS := {"w": Vector2(1003,58), "c": Vector2(1134,58), "t": Vector2(1134,116)}
+const RESOURCE_ICON_NAMES := {"w":"wheat", "c":"carrot", "t":"titanium"}
 const W := 11
 const H := 9
 const MINT := Color("a6e6c7")
@@ -34,8 +35,8 @@ const LEVELS := [
 
 var stage := 0
 var current_level
-var harvest := {"w":0,"c":0}
-var displayed_harvest := {"w":0,"c":0}
+var harvest := {"w":0,"c":0,"t":0}
+var displayed_harvest := {"w":0,"c":0,"t":0}
 var rock_break_level := 0
 var reach_level := 0
 var jump_unlocked := false
@@ -45,6 +46,7 @@ var crops: Dictionary = {}
 var tiles: Dictionary = {}
 var rocks: Dictionary = {}
 var rock_nodes: Dictionary = {}
+var collected_titanium_rocks: Dictionary = {}
 var scenery_blockers: Dictionary = {}
 var floor_materials: Dictionary = {}
 var tile_nodes: Dictionary = {}
@@ -75,6 +77,8 @@ var title_menu: Control
 var title_active := false
 var wheat_total: Label
 var carrot_total: Label
+var titanium_icon: TextureRect
+var titanium_total: Label
 var shop_panel: PanelContainer
 var shop_closed_for_visit := false
 var overlay: PanelContainer
@@ -123,7 +127,7 @@ func _ready() -> void:
 		call_deferred("smoke_test")
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--stage="):
-			harvest = {"w":16,"c":16}
+			harvest = {"w":16,"c":16,"t":16}
 			load_stage(clampi(arg.trim_prefix("--stage=").to_int(),0,7))
 	if "--capture" in OS.get_cmdline_user_args():
 		capture_later()
@@ -427,6 +431,10 @@ func build_ui() -> void:
 	wheat_total = label_at("0",Vector2(1040,40),26,GOLD,hud)
 	crop_icon("carrot",Vector2(1110,32),Vector2(48,52),hud)
 	carrot_total = label_at("0",Vector2(1174,40),26,GOLD,hud)
+	titanium_icon = crop_icon("titanium",Vector2(1110,90),Vector2(48,52),hud)
+	titanium_total = label_at("0",Vector2(1174,98),26,GOLD,hud)
+	titanium_icon.visible = false
+	titanium_total.visible = false
 
 func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
 	var icon := TextureRect.new()
@@ -449,7 +457,8 @@ func crop_icon_world_position(c: Vector2i) -> Vector2:
 func queue_harvest_icon(c: Vector2i, resource: String) -> void:
 	harvest_icon_sequence += 1
 	var key := str(harvest_icon_sequence)
-	var icon := crop_icon("wheat" if resource == "w" else "carrot",Vector2.ZERO,HARVEST_ICON_SIZE,ui)
+	var crop_name: String = RESOURCE_ICON_NAMES[resource]
+	var icon := crop_icon(crop_name,Vector2.ZERO,HARVEST_ICON_SIZE,ui)
 	icon.position = crop_icon_world_position(c)-icon.size*0.5
 	icon.pivot_offset = icon.size*0.5
 	var start_delay := 0.14
@@ -593,7 +602,7 @@ func has_shop() -> bool:
 func can_afford_any_upgrade() -> bool:
 	return (rock_break_level < 2 and harvest.c >= 8*(rock_break_level+1)) \
 		or (reach_level < 2 and harvest.w >= 10*(reach_level+1)) \
-		or (not jump_unlocked and harvest.w >= 15)
+		or (not jump_unlocked and harvest.t >= 50)
 
 func make_shop_marker(c: Vector2i) -> void:
 	var overlay := MeshInstance3D.new()
@@ -629,7 +638,7 @@ func dismiss_shop() -> void:
 	close_shop()
 
 func save_stage() -> void:
-	states[stage] = {"crops":crops.duplicate(true),"bridge":bridge_open}
+	states[stage] = {"crops":crops.duplicate(true),"bridge":bridge_open,"rocks":rocks.duplicate(true)}
 
 func load_stage(index: int, from_right: bool = false) -> void:
 	cancel_charge()
@@ -642,6 +651,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	tiles.clear()
 	rocks.clear()
 	rock_nodes.clear()
+	collected_titanium_rocks.clear()
 	scenery_blockers.clear()
 	tile_nodes.clear()
 	crop_nodes.clear()
@@ -674,6 +684,13 @@ func load_stage(index: int, from_right: bool = false) -> void:
 				box(board,grid_pos(c)+Vector3(0,0.02,0),Vector3(0.65,0.05,0.65),GOLD,0.5)
 	if states.has(stage):
 		crops = states[stage].crops.duplicate(true)
+		if states[stage].has("rocks"):
+			var saved_rocks: Dictionary = states[stage].rocks
+			for rock_cell in rock_nodes.keys():
+				if not saved_rocks.has(rock_cell):
+					(rock_nodes[rock_cell] as Node3D).queue_free()
+					rock_nodes.erase(rock_cell)
+			rocks = saved_rocks.duplicate(true)
 		if states[stage].bridge: open_bridge()
 	for decoration in current_level.decorations():
 		asset(board,decoration.asset,grid_pos(decoration.cell),decoration.size)
@@ -719,6 +736,10 @@ func update_ui() -> void:
 func refresh_inventory_totals() -> void:
 	wheat_total.text = str(displayed_harvest.w)
 	carrot_total.text = str(displayed_harvest.c)
+	titanium_total.text = str(displayed_harvest.t)
+	var titanium_unlocked := rock_break_level >= 2
+	titanium_icon.visible = titanium_unlocked
+	titanium_total.visible = titanium_unlocked
 
 func walkable(c: Vector2i) -> bool:
 	return tiles.has(c) and not rocks.has(c) and not crops.has(c) and not scenery_blockers.has(c)
@@ -832,7 +853,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			load_stage(stage+1)
 			return
 		if event.keycode == KEY_8:
-			harvest = {"w":99,"c":99}
+			harvest = {"w":99,"c":99,"t":99}
 			update_ui()
 			if is_shop(): show_shop()
 			return
@@ -884,6 +905,7 @@ func can_break_rock(c: Vector2i) -> bool:
 
 func break_rock(c: Vector2i) -> void:
 	if not can_break_rock(c): return
+	var rock_kind: String = rocks[c]
 	rocks.erase(c)
 	var n := rock_nodes.get(c) as Node3D
 	rock_nodes.erase(c)
@@ -893,6 +915,10 @@ func break_rock(c: Vector2i) -> void:
 		tween.tween_property(n,"scale",Vector3.ZERO,0.16)
 		tween.tween_property(n,"position:y",n.position.y+0.18,0.16)
 		tween.chain().tween_callback(n.queue_free)
+	if rock_kind == "titanium":
+		collected_titanium_rocks[c] = true
+		harvest.t += 1
+		queue_harvest_icon(c,"t")
 
 func hit_crop(c: Vector2i) -> void:
 	if not crops.has(c): return
@@ -1104,6 +1130,8 @@ func reset_field() -> void:
 		if not crops.has(c):
 			harvest[kind.to_lower()] -= 1
 			total_harvest -= 1
+	for c in collected_titanium_rocks:
+		harvest.t -= 1
 	load_stage(stage)
 
 func show_shop() -> void:
@@ -1119,13 +1147,14 @@ func show_shop() -> void:
 	shop_upgrade_row(content,108,"Break Titanium  ·  Level 2","Shatter titanium stone",16,"c",rock_break_level >= 2,func(): buy_break_upgrade(2))
 	shop_upgrade_row(content,174,"Scythe Reach  ·  Level 1","+1 tile throwing distance",10,"w",reach_level >= 1,func(): buy_reach_upgrade(1))
 	shop_upgrade_row(content,240,"Scythe Reach  ·  Level 2","+1 tile throwing distance",20,"w",reach_level >= 2,func(): buy_reach_upgrade(2))
-	shop_upgrade_row(content,306,"Jumping","Cross one void tile",15,"w",jump_unlocked,buy_jump_upgrade)
+	shop_upgrade_row(content,306,"Jumping","Cross one void tile",50,"t",jump_unlocked,buy_jump_upgrade)
 
 func shop_upgrade_row(content: Control, y: float, title: String, detail: String, cost: int, resource: String, installed: bool, action: Callable) -> void:
 	label_at(title,Vector2(20,y),18,WHITE,content)
 	label_at(detail,Vector2(20,y+24),12,MUTED,content)
 	var purchase := button("Installed" if installed else "%d   /   Upgrade" % cost,Vector2(370,y+7),Vector2(220,36),action,content)
-	purchase.icon = load("res://assets/icons/carrot.png" if resource == "c" else "res://assets/icons/wheat.png")
+	var icon_name: String = RESOURCE_ICON_NAMES[resource]
+	purchase.icon = load("res://assets/icons/"+icon_name+".png")
 	purchase.expand_icon = true
 	purchase.add_theme_constant_override("icon_max_width",24)
 	purchase.disabled = installed or harvest[resource] < cost
@@ -1147,8 +1176,8 @@ func buy_reach_upgrade(level: int) -> void:
 	show_shop()
 
 func buy_jump_upgrade() -> void:
-	if jump_unlocked or harvest.w < 15: return
-	harvest.w -= 15
+	if jump_unlocked or harvest.t < 50: return
+	harvest.t -= 50
 	jump_unlocked = true
 	update_ui()
 	show_shop()
@@ -1178,7 +1207,7 @@ func show_ending() -> void:
 func restart() -> void:
 	close_overlay()
 	states.clear()
-	harvest = {"w":0,"c":0}
+	harvest = {"w":0,"c":0,"t":0}
 	rock_break_level = 0
 	reach_level = 0
 	jump_unlocked = false
@@ -1215,7 +1244,7 @@ func smoke_test() -> void:
 			bunny.position = grid_pos(cell)
 			show_shop()
 			assert(is_instance_valid(shop_panel),"Shop opens only after reaching a shop tile")
-			harvest = {"w":1000,"c":1000}
+			harvest = {"w":1000,"c":1000,"t":1000}
 			var before := rock_break_level
 			if rock_break_level < 2:
 				buy_break_upgrade(rock_break_level+1)
