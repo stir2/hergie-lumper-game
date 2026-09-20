@@ -3,6 +3,11 @@ extends Node
 const RENDER_SCALE := 2.0
 const CHARGE_SECONDS := 0.9
 const MIN_THROW_DISTANCE := 1.0
+const SCYTHE_OUTBOUND_MAX_SPEED := 12.0
+const SCYTHE_OUTBOUND_MIN_SPEED := 5.0
+const SCYTHE_RETURN_MAX_SPEED := 22.0
+const SCYTHE_MODEL_SCALE := 0.675
+const SCYTHE_HITBOX_VERTICAL_PADDING := 0.315
 const BUNNY_ROTATION_OFFSET := -PI / 2.0
 const W := 11
 const H := 9
@@ -70,6 +75,8 @@ var shot_return := false
 var shot_origin := Vector3.ZERO
 var shot_dir := Vector3.RIGHT
 var shot_distance := 0.0
+var shot_speed := 0.0
+var shot_return_start_distance := 0.0
 var shot_hits: Dictionary = {}
 var time := 0.0
 var bridge_open := false
@@ -275,7 +282,7 @@ func make_scythe(pivot_at_handle: bool = false) -> Node3D:
 	var packed: PackedScene = load("res://Imported/GLB/Jefferson/scythe.glb")
 	var model := packed.instantiate() as Node3D
 	root.add_child(model)
-	model.scale = Vector3.ONE*0.75
+	model.scale = Vector3.ONE*SCYTHE_MODEL_SCALE
 	model.rotation_degrees = Vector3(0,0,90)
 	# After the visual rotation, the lower handle end lies along local +X.
 	# Offset the held mesh so its handle, rather than its imported center, is the pivot.
@@ -284,7 +291,7 @@ func make_scythe(pivot_at_handle: bool = false) -> Node3D:
 	var scythe_material := load("res://Materials/Atlas1.tres") as StandardMaterial3D
 	if model is MeshInstance3D:
 		(model as MeshInstance3D).material_override = scythe_material
-	for child in model.find_children("*", "MeshInstance3D"):
+	for child in model.find_children("*", "MeshInstance3D",true,false):
 		child.material_override = scythe_material
 	return root
 
@@ -623,7 +630,13 @@ func _notification(what: int) -> void:
 		cancel_charge()
 
 func charged_distance() -> float:
-	return lerpf(MIN_THROW_DISTANCE,float(reach),clampf(charge_time/CHARGE_SECONDS,0.0,1.0))
+	return lerpf(MIN_THROW_DISTANCE,max_throw_distance(),charge_progress())
+
+func charge_progress() -> float:
+	return sqrt(clampf(charge_time/CHARGE_SECONDS,0.0,1.0))
+
+func max_throw_distance() -> float:
+	return float(reach+1)
 
 func start_charge(target: Vector3) -> void:
 	if shot_active or charging or is_shop() or finished or is_instance_valid(overlay): return
@@ -676,10 +689,12 @@ func throw_scythe(target: Vector3, distance: float = -1.0) -> void:
 	var direction := target-bunny.position
 	direction.y = 0
 	if direction.length() < 0.1: return
-	shot_limit = float(reach) if distance < 0.0 else clampf(distance,MIN_THROW_DISTANCE,float(reach))
+	shot_limit = max_throw_distance() if distance < 0.0 else clampf(distance,MIN_THROW_DISTANCE,max_throw_distance())
 	shot_dir = direction.normalized()
 	shot_origin = bunny.position+Vector3(0,0.45,0)
 	shot_distance = 0
+	shot_speed = SCYTHE_OUTBOUND_MAX_SPEED
+	shot_return_start_distance = 0
 	shot_return = false
 	shot_active = true
 	shot_hits.clear()
@@ -687,7 +702,9 @@ func throw_scythe(target: Vector3, distance: float = -1.0) -> void:
 	scythe.visible = true
 	held.visible = false
 	bunny_model.rotation.y = atan2(shot_dir.x,shot_dir.z) + BUNNY_ROTATION_OFFSET
-	if not muted: throw_audio.play()
+	if not muted:
+		throw_audio.pitch_scale = 1.0
+		throw_audio.play()
 
 func hit_crop(c: Vector2i) -> void:
 	if not crops.has(c): return
@@ -723,7 +740,7 @@ func _process(dt: float) -> void:
 	transition_lock = maxf(0,transition_lock-dt)
 	if charging:
 		charge_time = minf(CHARGE_SECONDS,charge_time+dt)
-		held.rotation.y = PI*0.5*(charge_time/CHARGE_SECONDS)
+		held.rotation.y = PI*0.5*charge_progress()
 	if not path.is_empty():
 		var target := grid_pos(path[0])
 		var delta := target-bunny.position
@@ -754,17 +771,25 @@ func _process(dt: float) -> void:
 	update_aim()
 
 func update_shot(dt: float) -> void:
-	scythe.rotation.y += dt*19
 	if shot_return:
-		scythe.position = scythe.position.move_toward(bunny.position+Vector3(0,0.45,0),dt*12)
-		if scythe.position.distance_to(bunny.position+Vector3(0,0.45,0))<0.1:
+		var return_target := bunny.position+Vector3(0,0.45,0)
+		var distance_left := scythe.position.distance_to(return_target)
+		var return_progress := 1.0-distance_left/maxf(shot_return_start_distance,0.001)
+		shot_speed = lerpf(SCYTHE_OUTBOUND_MIN_SPEED,SCYTHE_RETURN_MAX_SPEED,clampf(return_progress,0.0,1.0))
+		var return_pitch_progress := inverse_lerp(SCYTHE_OUTBOUND_MIN_SPEED,SCYTHE_RETURN_MAX_SPEED,shot_speed)
+		throw_audio.pitch_scale = lerpf(0.72,1.28,return_pitch_progress)
+		scythe.rotation.y += dt*(8.0+shot_speed*1.35)
+		scythe.position = scythe.position.move_toward(return_target,dt*shot_speed)
+		if scythe.position.distance_to(return_target)<0.1:
 			shot_active = false
 			scythe.visible = false
 			held.visible = true
 			throw_audio.stop()
 		return
 	# Short substeps prevent a fast blade skipping a crop or a rock.
-	var distance := minf(dt*8,shot_limit-shot_distance)
+	var outbound_progress := shot_distance/maxf(shot_limit,0.001)
+	shot_speed = lerpf(SCYTHE_OUTBOUND_MAX_SPEED,SCYTHE_OUTBOUND_MIN_SPEED,outbound_progress)
+	var distance := minf(dt*shot_speed,shot_limit-shot_distance)
 	var steps := maxi(1,ceili(distance/0.1))
 	for i in steps:
 		shot_distance += distance/steps
@@ -772,11 +797,37 @@ func update_shot(dt: float) -> void:
 		var c := Vector2i(roundi(scythe.position.x)+5,roundi(scythe.position.z)+4)
 		if rocks.has(c):
 			shot_return = true
+			shot_return_start_distance = scythe.position.distance_to(bunny.position+Vector3(0,0.45,0))
 			break
-		if crops.has(c) and not shot_hits.has(c):
-			shot_hits[c] = true
-			hit_crop(c)
-	if shot_distance >= shot_limit-0.001: shot_return = true
+		hit_crops_in_scythe_hitbox()
+	if shot_distance >= shot_limit-0.001:
+		shot_return = true
+		shot_return_start_distance = scythe.position.distance_to(bunny.position+Vector3(0,0.45,0))
+	var pitch_progress := inverse_lerp(SCYTHE_OUTBOUND_MIN_SPEED,SCYTHE_RETURN_MAX_SPEED,shot_speed)
+	throw_audio.pitch_scale = lerpf(0.72,1.28,pitch_progress)
+	scythe.rotation.y += dt*(8.0+shot_speed*1.35)
+
+func scythe_hitbox() -> AABB:
+	var has_bounds := false
+	var bounds := AABB()
+	for child in scythe.find_children("*", "MeshInstance3D",true,false):
+		var mesh_instance := child as MeshInstance3D
+		if mesh_instance.mesh == null: continue
+		var mesh_bounds := mesh_instance.global_transform*mesh_instance.get_aabb()
+		bounds = mesh_bounds if not has_bounds else bounds.merge(mesh_bounds)
+		has_bounds = true
+	bounds.position.y -= SCYTHE_HITBOX_VERTICAL_PADDING
+	bounds.size.y += SCYTHE_HITBOX_VERTICAL_PADDING*2.0
+	return bounds
+
+func hit_crops_in_scythe_hitbox() -> void:
+	var blade_bounds := scythe_hitbox()
+	for crop_cell in crops.keys():
+		if shot_hits.has(crop_cell): continue
+		var crop_mesh := crop_nodes[crop_cell] as MeshInstance3D
+		if crop_mesh != null and blade_bounds.intersects(crop_mesh.global_transform*crop_mesh.get_aabb()):
+			shot_hits[crop_cell] = true
+			hit_crop(crop_cell)
 
 func update_aim() -> void:
 	for dot in aim_markers: dot.visible = false
@@ -797,7 +848,7 @@ func update_aim() -> void:
 	bunny_model.rotation.y = atan2(direction.x,direction.z) + BUNNY_ROTATION_OFFSET
 	var distance := charged_distance()
 	for i in aim_markers.size():
-		var offset := float(i+1)*float(reach)/aim_markers.size()
+		var offset := float(i+1)*max_throw_distance()/aim_markers.size()
 		if offset>distance: break
 		var p := bunny.position + direction*offset
 		var tc := Vector2i(roundi(p.x)+5,roundi(p.z)+4)
