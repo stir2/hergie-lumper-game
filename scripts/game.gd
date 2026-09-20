@@ -168,8 +168,6 @@ func asset(parent: Node3D, file: String, pos: Vector3, target_size: float) -> Me
 	var wheat_mesh := "Wheat" in file
 	if wheat_mesh:
 		n.material_override = material(Color("d7b354"))
-	if "Greenhouse.tres" in file:
-		n.material_override = load("res://Materials/Atlas1.tres")
 	var bounds := n.mesh.get_aabb()
 	var factor := target_size / maxf(bounds.size.x,maxf(bounds.size.y,bounds.size.z))
 	n.scale = Vector3.ONE * factor

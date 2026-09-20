@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://csjb2gh80c4vn"]
 
 [ext_resource type="Script" uid="uid://u8r2akokwlm5" path="res://scripts/level_scene.gd" id="1"]
-[ext_resource type="MeshLibrary" uid="uid://de828sfelxtse" path="res://scenes/levels/level_tiles.tres" id="2_q1nji"]
+[ext_resource type="MeshLibrary" path="res://scenes/levels/level_tiles.tres" id="2_q1nji"]
 
 [node name="LittleGreenhouse" type="Node3D" unique_id=726878497]
 script = ExtResource("1")
