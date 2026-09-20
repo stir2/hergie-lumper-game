@@ -16,17 +16,18 @@ const GOLD := Color("efd594")
 const WHITE := Color("edf1df")
 const MUTED := Color("95abae")
 const LEVELS := [
-	{"name":"First light", "region":"THE SEEDLING BELT", "map":["...........","..ww...cc..","..ww...cc..","...........","...........","...##......","..ww...cc..","..ww...cc..","..........."]},
-	{"name":"Across the blue", "region":"THE SEEDLING BELT", "map":["...........",".ww.~..cc..",".ww.~..cc..","....~......","...........","....~..##..",".cc.~..ww..",".cc.~..ww..","..........."]},
-	{"name":"The little greenhouse", "region":"WAYSTATION 01", "shop":true},
-	{"name":"Roots & routes", "region":"THE AMBER REACH", "map":["...........",".WW..#..cc.",".WW..#..cc.",".....#.....","...........","...#.......",".cc#..WW...",".cc...WW...","..........."]},
-	{"name":"A bridge of stars", "region":"THE AMBER REACH", "map":[".....~.....",".ww..~.cc..",".ww..~.cc..",".....~.....","..s..b.....",".....~.....",".cc..~.WW..",".cc..~.WW..",".....~....."]},
-	{"name":"The wandering nursery", "region":"WAYSTATION 02", "shop":true},
-	{"name":"Lunar labyrinth", "region":"THE MOONFLOWER DRIFT", "map":["...........",".WW#..CC...",".WW#..CC...","...#.......","...#...#...",".......#...",".CC...#WW..",".CC....WW..","..........."]},
-	{"name":"The last constellation", "region":"THE MOONFLOWER DRIFT", "map":[".....~.....",".WW..~.CC..",".WW..~.CC..","..#..~..#..","..s..b.....","..#..~..#..",".CC..~.WW..",".CC..~.WW..",".....~....."]}
+	preload("res://scenes/levels/00_first_light.tscn"),
+	preload("res://scenes/levels/01_across_the_blue.tscn"),
+	preload("res://scenes/levels/02_little_greenhouse.tscn"),
+	preload("res://scenes/levels/03_roots_and_routes.tscn"),
+	preload("res://scenes/levels/04_bridge_of_stars.tscn"),
+	preload("res://scenes/levels/05_wandering_nursery.tscn"),
+	preload("res://scenes/levels/06_lunar_labyrinth.tscn"),
+	preload("res://scenes/levels/07_last_constellation.tscn")
 ]
 
 var stage := 0
+var current_level
 var harvest := {"w":0,"c":0}
 var power := 1
 var reach := 3
@@ -490,8 +491,8 @@ func grid_pos(c: Vector2i) -> Vector3:
 func nearest_cell(pos: Vector3) -> Vector2i:
 	return Vector2i(clampi(roundi(pos.x)+5,0,W-1),clampi(roundi(pos.z)+4,0,H-1))
 
-func is_shop(index: int = stage) -> bool:
-	return LEVELS[index].get("shop",false)
+func is_shop() -> bool:
+	return current_level.shop
 
 func save_stage() -> void:
 	states[stage] = {"crops":crops.duplicate(true),"bridge":bridge_open}
@@ -513,13 +514,12 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	throw_audio.stop()
 	bridge_open = false
 	if is_instance_valid(shop_panel): shop_panel.queue_free()
-	var rows: Array = LEVELS[stage].get("map",[])
-	if is_shop():
-		rows = ["...........","...........","...........","...........","...........","...........","...........","...........","..........."]
+	current_level = LEVELS[stage].instantiate()
+	board.add_child(current_level)
 	for z in H:
 		for x in W:
 			var c := Vector2i(x,z)
-			var kind: String = rows[z][x]
+			var kind: String = current_level.tile_kind_at(c)
 			if kind == "~" or kind == "b": continue
 			tiles[c] = kind
 			tile_nodes[c] = floor_tile(c,kind)
@@ -862,9 +862,9 @@ func update_aim() -> void:
 func open_bridge() -> void:
 	if bridge_open: return
 	bridge_open = true
-	var c := Vector2i(5,4)
-	tiles[c] = "."
-	tile_nodes[c] = box(board,grid_pos(c)-Vector3(0,0.17,0),Vector3(0.97,0.32,0.97),MINT,0.2)
+	for c in current_level.cells_in(4):
+		tiles[c] = "."
+		tile_nodes[c] = box(board,grid_pos(c)-Vector3(0,0.17,0),Vector3(0.97,0.32,0.97),MINT,0.2)
 
 func next_stage() -> void:
 	save_stage()
@@ -879,13 +879,11 @@ func reset_field() -> void:
 	# A field can only reset before leaving it; persisted cleared fields stay cleared.
 	if states.has(stage):
 		return
-	var rows: Array = LEVELS[stage].map
-	for z in H:
-		for x in W:
-			var kind: String = rows[z][x]
-			if kind.to_lower() in ["w","c"] and not crops.has(Vector2i(x,z)):
-				harvest[kind.to_lower()] -= 1
-				total_harvest -= 1
+	for c in current_level.crop_cells():
+		var kind: String = current_level.crop_kind_at(c)
+		if not crops.has(c):
+			harvest[kind.to_lower()] -= 1
+			total_harvest -= 1
 	load_stage(stage)
 
 func show_shop() -> void:
