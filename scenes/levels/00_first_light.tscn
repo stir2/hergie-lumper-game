@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://by2o3qlqoty2a"]
 
 [ext_resource type="Script" uid="uid://u8r2akokwlm5" path="res://scripts/level_scene.gd" id="1"]
-[ext_resource type="MeshLibrary" uid="uid://bn4vgj823gf6i" path="res://scenes/levels/level_tiles.tres" id="2_o0yqi"]
+[ext_resource type="MeshLibrary" path="res://scenes/levels/level_tiles.tres" id="2_o0yqi"]
 
 [node name="FirstLight" type="Node3D" unique_id=394386599]
 script = ExtResource("1")

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dsjuopsy48r8k"]
 
 [ext_resource type="Script" uid="uid://u8r2akokwlm5" path="res://scripts/level_scene.gd" id="1"]
-[ext_resource type="MeshLibrary" uid="uid://de828sfelxtse" path="res://scenes/levels/level_tiles.tres" id="2_sr32x"]
+[ext_resource type="MeshLibrary" path="res://scenes/levels/level_tiles.tres" id="2_sr32x"]
 
 [node name="AcrossTheBlue" type="Node3D" unique_id=412090342]
 script = ExtResource("1")

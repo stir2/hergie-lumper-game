@@ -168,8 +168,6 @@ func asset(parent: Node3D, file: String, pos: Vector3, target_size: float) -> Me
 	var wheat_mesh := "Wheat" in file
 	if wheat_mesh:
 		n.material_override = material(Color("d7b354"))
-	if "Greenhouse.tres" in file:
-		n.material_override = load("res://Materials/Atlas1.tres")
 	var bounds := n.mesh.get_aabb()
 	var factor := target_size / maxf(bounds.size.x,maxf(bounds.size.y,bounds.size.z))
 	n.scale = Vector3.ONE * factor
@@ -591,7 +589,7 @@ func update_ui() -> void:
 	wheat_total.text = str(harvest.w)
 	carrot_total.text = str(harvest.c)
 	equipment.text = "Break  %d / 2     Reach  +%d     Jump  %s" % [rock_break_level,reach_level,"ON" if jump_unlocked else "OFF"]
-	gate.material_override = material(MINT if crops.is_empty() else Color("b98860"),0.5)
+	gate.material_override = material(MINT,0.5)
 
 func walkable(c: Vector2i) -> bool:
 	return tiles.has(c) and not rocks.has(c) and not crops.has(c) and not scenery_blockers.has(c)
@@ -845,7 +843,7 @@ func _process(dt: float) -> void:
 				if look_direction.length_squared() > 0.01:
 					bunny_model.rotation.y = lerp_angle(bunny_model.rotation.y,atan2(look_direction.x,look_direction.z) + BUNNY_ROTATION_OFFSET,dt*14)
 	if transition_lock == 0 and path.is_empty() and not shot_active and not charging:
-		if cell == Vector2i(10,4) and crops.is_empty():
+		if cell == Vector2i(10,4):
 			next_stage()
 		elif cell == Vector2i(0,4) and stage > 0:
 			save_stage()
