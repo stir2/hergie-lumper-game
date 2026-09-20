@@ -229,8 +229,6 @@ func build_world() -> void:
 	bunny_model = Node3D.new()
 	bunny.add_child(bunny_model)
 	asset(bunny_model,"res://Meshes/Jefferson/BunnyFarmer.tres",Vector3.ZERO,1.02)
-	# A little oxygen pack marks our space farmer.
-	box(bunny_model,Vector3(0,0.40,0.27),Vector3(0.30,0.36,0.18),Color("74acac"))
 	hand_anchor = Node3D.new()
 	bunny_model.add_child(hand_anchor)
 	# Hand attachment point for the held scythe. Adjust these values if needed
