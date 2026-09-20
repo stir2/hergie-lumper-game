@@ -7,7 +7,7 @@ extends Node3D
 @export var region := ""
 @export var shop := false
 
-enum Tile { FLOOR, VOID, ROCK, SWITCH, BRIDGE, WHEAT, TOUGH_WHEAT, CARROT, TOUGH_CARROT }
+enum Tile { FLOOR, VOID, ROCK, SWITCH, BRIDGE, WHEAT, TOUGH_WHEAT, CARROT, TOUGH_CARROT, TITANIUM_ROCK }
 
 const TILE_KINDS := {
 	Tile.FLOOR: ".",
@@ -18,11 +18,11 @@ const TILE_KINDS := {
 	Tile.WHEAT: "w",
 	Tile.TOUGH_WHEAT: "W",
 	Tile.CARROT: "c",
-	Tile.TOUGH_CARROT: "C"
+	Tile.TOUGH_CARROT: "C",
+	Tile.TITANIUM_ROCK: "t"
 }
 
 const DECORATION_ASSETS := {
-	9: {"asset": "res://Meshes/Jefferson/RockTitanium3.tres", "size": 0.94},
 	10: {"asset": "res://Meshes/Kevin/Glass1.tres", "size": 0.9},
 	11: {"asset": "res://Meshes/Kevin/Railing1.tres", "size": 0.9},
 	12: {"asset": "res://Meshes/Kevin/BrickBuilding1.tres", "size": 1.35},

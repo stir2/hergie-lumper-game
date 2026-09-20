@@ -3,6 +3,8 @@ extends Node
 const RENDER_SCALE := 2.0
 const CHARGE_SECONDS := 0.9
 const MIN_THROW_DISTANCE := 1.0
+const BASE_THROW_DISTANCE := 4.0
+const JUMP_DURATION := 0.34
 const SCYTHE_OUTBOUND_MAX_SPEED := 12.0
 const SCYTHE_OUTBOUND_MIN_SPEED := 5.0
 const SCYTHE_RETURN_MAX_SPEED := 22.0
@@ -29,18 +31,24 @@ const LEVELS := [
 var stage := 0
 var current_level
 var harvest := {"w":0,"c":0}
-var power := 1
-var reach := 3
+var rock_break_level := 0
+var reach_level := 0
+var jump_unlocked := false
 var total_harvest := 0
 var states: Dictionary = {}
 var crops: Dictionary = {}
 var tiles: Dictionary = {}
 var rocks: Dictionary = {}
+var rock_nodes: Dictionary = {}
 var floor_materials: Dictionary = {}
 var tile_nodes: Dictionary = {}
 var crop_nodes: Dictionary = {}
 var path: Array[Vector2i] = []
 var cell := Vector2i(0,4)
+var hop_active := false
+var hop_progress := 0.0
+var hop_start := Vector3.ZERO
+var hop_target := Vector3.ZERO
 var world: Node3D
 var board: Node3D
 var background_ruins: Node3D
@@ -446,6 +454,7 @@ func menu_button(
 
 func show_title() -> void:
 	cancel_charge()
+	cancel_hop()
 	path.clear()
 	title_active = true
 	hud.visible = false
@@ -499,12 +508,14 @@ func save_stage() -> void:
 
 func load_stage(index: int, from_right: bool = false) -> void:
 	cancel_charge()
+	cancel_hop()
 	stage = index
 	for n in board.get_children():
 		n.free()
 	crops.clear()
 	tiles.clear()
 	rocks.clear()
+	rock_nodes.clear()
 	tile_nodes.clear()
 	crop_nodes.clear()
 	path.clear()
@@ -524,9 +535,9 @@ func load_stage(index: int, from_right: bool = false) -> void:
 			tiles[c] = kind
 			tile_nodes[c] = floor_tile(c,kind)
 			box(board,grid_pos(c)-Vector3(0,0.44,0),Vector3(0.85,0.18,0.85),Color("213943"))
-			if kind == "#":
-				rocks[c] = true
-				asset(board,"res://Meshes/Jefferson/RockPlain2.tres",grid_pos(c),0.94)
+			if kind in ["#", "t"]:
+				rocks[c] = "titanium" if kind == "t" else "normal"
+				rock_nodes[c] = asset(board,"res://Meshes/Jefferson/RockTitanium3.tres" if kind == "t" else "res://Meshes/Jefferson/RockPlain2.tres",grid_pos(c),0.94)
 			if kind.to_lower() in ["w","c"]:
 				crops[c] = {"kind":kind,"hp":(2 if kind == "W" else (3 if kind == "C" else 1))}
 			if kind == "s":
@@ -567,14 +578,14 @@ func load_stage(index: int, from_right: bool = false) -> void:
 			for z in [0,7]:
 				asset(board,"res://Meshes/Jefferson/WheatFull.tres",grid_pos(Vector2i(x,z)),0.72)
 		for x in range(4,7):
-			for z in range(1,4): rocks[Vector2i(x,z)] = true
+			for z in range(1,4): rocks[Vector2i(x,z)] = "normal"
 		show_shop()
 	update_ui()
 
 func update_ui() -> void:
 	wheat_total.text = str(harvest.w)
 	carrot_total.text = str(harvest.c)
-	equipment.text = "Power  %d     /     Reach  %d" % [power,reach]
+	equipment.text = "Break  %d / 2     Reach  +%d     Jump  %s" % [rock_break_level,reach_level,"ON" if jump_unlocked else "OFF"]
 	gate.material_override = material(MINT if crops.is_empty() else Color("b98860"),0.5)
 
 func walkable(c: Vector2i) -> bool:
@@ -595,6 +606,11 @@ func find_path(start: Vector2i, target: Vector2i) -> Array[Vector2i]:
 			if walkable(next) and not previous.has(next):
 				previous[next] = cur
 				queue.append(next)
+			elif jump_unlocked and not tiles.has(next):
+				var landing: Vector2i = cur+dir*2
+				if walkable(landing) and not previous.has(landing):
+					previous[landing] = cur
+					queue.append(landing)
 	if not previous.has(target): return result
 	var step := target
 	while step != start:
@@ -631,10 +647,11 @@ func charge_progress() -> float:
 	return sqrt(clampf(charge_time/CHARGE_SECONDS,0.0,1.0))
 
 func max_throw_distance() -> float:
-	return float(reach+1)
+	return BASE_THROW_DISTANCE+reach_level
 
 func start_charge(target: Vector3) -> void:
 	if shot_active or charging or is_shop() or finished or is_instance_valid(overlay): return
+	cancel_hop()
 	path.clear()
 	cell = nearest_cell(bunny.position)
 	bunny.position = grid_pos(cell)
@@ -648,6 +665,17 @@ func cancel_charge() -> void:
 	charge_time = 0.0
 	for dot in aim_markers: dot.visible = false
 	if is_instance_valid(held): held.rotation.y = 0.0
+
+func cancel_hop() -> void:
+	hop_active = false
+	hop_progress = 0.0
+	if is_instance_valid(bunny): bunny.position.y = 0.0
+
+func is_hop_between(from: Vector2i, to: Vector2i) -> bool:
+	var delta: Vector2i = to-from
+	if absi(delta.x)+absi(delta.y) != 2: return false
+	var midpoint: Vector2i = from+Vector2i(signi(delta.x),signi(delta.y))
+	return jump_unlocked and not tiles.has(midpoint)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -666,6 +694,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			finished = false
 			save_stage()
 			load_stage(stage+1)
+			return
+		if event.keycode == KEY_8:
+			harvest = {"w":99,"c":99}
+			update_ui()
+			if is_shop(): show_shop()
 			return
 		if event.keycode == KEY_R and not is_instance_valid(overlay) and not is_shop(): reset_field()
 		if event.keycode == KEY_M:
@@ -689,6 +722,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func throw_scythe(target: Vector3, distance: float = -1.0) -> void:
 	if shot_active or is_shop(): return
+	cancel_hop()
 	path.clear()
 	bunny.position = grid_pos(cell)
 	var direction := target-bunny.position
@@ -711,9 +745,25 @@ func throw_scythe(target: Vector3, distance: float = -1.0) -> void:
 		throw_audio.pitch_scale = 1.0
 		throw_audio.play()
 
+func can_break_rock(c: Vector2i) -> bool:
+	if not rocks.has(c): return false
+	return rock_break_level >= (2 if rocks[c] == "titanium" else 1)
+
+func break_rock(c: Vector2i) -> void:
+	if not can_break_rock(c): return
+	rocks.erase(c)
+	var n := rock_nodes.get(c) as Node3D
+	rock_nodes.erase(c)
+	if n != null:
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(n,"scale",Vector3.ZERO,0.16)
+		tween.tween_property(n,"position:y",n.position.y+0.18,0.16)
+		tween.chain().tween_callback(n.queue_free)
+
 func hit_crop(c: Vector2i) -> void:
 	if not crops.has(c): return
-	crops[c].hp -= power
+	crops[c].hp -= 1
 	var n: Node3D = crop_nodes[c]
 	if crops[c].hp > 0:
 		var tween := create_tween()
@@ -747,16 +797,37 @@ func _process(dt: float) -> void:
 		charge_time = minf(CHARGE_SECONDS,charge_time+dt)
 		held.rotation.y = PI*0.5*charge_progress()
 	if not path.is_empty():
-		var target := grid_pos(path[0])
+		var next_cell: Vector2i = path[0]
+		var target := grid_pos(next_cell)
 		var delta := target-bunny.position
-		bunny.position = bunny.position.move_toward(target,dt*4.5)
 		bunny_model.rotation.y = lerp_angle(bunny_model.rotation.y,atan2(delta.x,delta.z) + BUNNY_ROTATION_OFFSET,dt*14)
-		bunny_model.position.y = absf(sin(time*17))*0.11
-		bunny_model.rotation.z = sin(time*17)*0.045
-		if bunny.position.distance_to(target)<0.015:
-			cell = path.pop_front()
-			if tiles.get(cell,"") == "s": open_bridge()
+		if is_hop_between(cell,next_cell):
+			if not hop_active:
+				hop_active = true
+				hop_progress = 0.0
+				hop_start = bunny.position
+				hop_start.y = 0.0
+				hop_target = target
+			hop_progress = minf(1.0,hop_progress+dt/JUMP_DURATION)
+			bunny.position = hop_start.lerp(hop_target,hop_progress)
+			bunny.position.y += sin(hop_progress*PI)*0.62
+			bunny_model.position.y = sin(hop_progress*PI)*0.08
+			bunny_model.rotation.z = -sin(hop_progress*PI)*0.14
+			if hop_progress >= 1.0:
+				bunny.position = hop_target
+				hop_active = false
+				cell = path.pop_front()
+				if tiles.get(cell,"") == "s": open_bridge()
+		else:
+			hop_active = false
+			bunny.position = bunny.position.move_toward(target,dt*4.5)
+			bunny_model.position.y = absf(sin(time*17))*0.11
+			bunny_model.rotation.z = sin(time*17)*0.045
+			if bunny.position.distance_to(target)<0.015:
+				cell = path.pop_front()
+				if tiles.get(cell,"") == "s": open_bridge()
 	else:
+		if hop_active: cancel_hop()
 		bunny_model.position.y = sin(time*2)*0.018
 		bunny_model.rotation.z = 0
 		if not shot_active and not charging:
@@ -801,9 +872,12 @@ func update_shot(dt: float) -> void:
 		scythe.position = shot_origin+shot_dir*shot_distance
 		var c := Vector2i(roundi(scythe.position.x)+5,roundi(scythe.position.z)+4)
 		if rocks.has(c):
-			shot_return = true
-			shot_return_start_distance = scythe.position.distance_to(bunny.position+Vector3(0,0.45,0))
-			break
+			if can_break_rock(c):
+				break_rock(c)
+			else:
+				shot_return = true
+				shot_return_start_distance = scythe.position.distance_to(bunny.position+Vector3(0,0.45,0))
+				break
 		hit_crops_in_scythe_hitbox()
 	if shot_distance >= shot_limit-0.001:
 		shot_return = true
@@ -857,7 +931,7 @@ func update_aim() -> void:
 		if offset>distance: break
 		var p := bunny.position + direction*offset
 		var tc := Vector2i(roundi(p.x)+5,roundi(p.z)+4)
-		if rocks.has(tc): break
+		if rocks.has(tc) and not can_break_rock(tc): break
 		aim_markers[i].position = p+Vector3(0,0.15,0)
 		aim_markers[i].visible = true
 
@@ -890,35 +964,46 @@ func reset_field() -> void:
 
 func show_shop() -> void:
 	if is_instance_valid(shop_panel): shop_panel.queue_free()
-	shop_panel = panel(Vector2(430,520),Vector2(690,140))
+	shop_panel = panel(Vector2(335,190),Vector2(610,400))
 	var content := Control.new()
-	content.custom_minimum_size = Vector2(690,140)
+	content.custom_minimum_size = Vector2(610,400)
 	shop_panel.add_child(content)
 	label_at("THE GREENHOUSE EXCHANGE",Vector2(20,14),12,MINT,content)
-	var power_cost := 8*power
-	var range_cost := 10*(reach-2)
-	label_at("Forged moonsteel",Vector2(20,40),20,WHITE,content)
-	label_at("+1 power",Vector2(20,69),13,MUTED,content)
-	var p := button("%d   /   Upgrade" % power_cost if power<3 else "Power fully upgraded",Vector2(20,91),Vector2(306,36),func(): buy_upgrade(true),content)
-	p.icon = load("res://assets/icons/carrot.png")
-	p.expand_icon = true
-	p.add_theme_constant_override("icon_max_width",24)
-	p.disabled = harvest.c<power_cost or power>=3
-	label_at("Orbital tether",Vector2(359,40),20,WHITE,content)
-	label_at("+1 tile of throwing distance",Vector2(359,69),13,MUTED,content)
-	var r := button("%d   /   Upgrade" % range_cost if reach<6 else "Reach fully upgraded",Vector2(359,91),Vector2(306,36),func(): buy_upgrade(false),content)
-	r.icon = load("res://assets/icons/wheat.png")
-	r.expand_icon = true
-	r.add_theme_constant_override("icon_max_width",24)
-	r.disabled = harvest.w<range_cost or reach>=6
+	shop_upgrade_row(content,42,"Break Rock  ·  Level 1","Shatter ordinary stone",8,"c",rock_break_level >= 1,func(): buy_break_upgrade(1))
+	shop_upgrade_row(content,108,"Break Titanium  ·  Level 2","Shatter titanium stone",16,"c",rock_break_level >= 2,func(): buy_break_upgrade(2))
+	shop_upgrade_row(content,174,"Scythe Reach  ·  Level 1","+1 tile throwing distance",10,"w",reach_level >= 1,func(): buy_reach_upgrade(1))
+	shop_upgrade_row(content,240,"Scythe Reach  ·  Level 2","+1 tile throwing distance",20,"w",reach_level >= 2,func(): buy_reach_upgrade(2))
+	shop_upgrade_row(content,306,"Jumping","Cross one void tile",15,"w",jump_unlocked,buy_jump_upgrade)
 
-func buy_upgrade(strength: bool) -> void:
-	var resource := "c" if strength else "w"
-	var cost := 8*power if strength else 10*(reach-2)
-	if harvest[resource]<cost or (strength and power>=3) or (not strength and reach>=6): return
-	harvest[resource] -= cost
-	if strength: power += 1
-	else: reach += 1
+func shop_upgrade_row(content: Control, y: float, title: String, detail: String, cost: int, resource: String, installed: bool, action: Callable) -> void:
+	label_at(title,Vector2(20,y),18,WHITE,content)
+	label_at(detail,Vector2(20,y+24),12,MUTED,content)
+	var purchase := button("Installed" if installed else "%d   /   Upgrade" % cost,Vector2(370,y+7),Vector2(220,36),action,content)
+	purchase.icon = load("res://assets/icons/carrot.png" if resource == "c" else "res://assets/icons/wheat.png")
+	purchase.expand_icon = true
+	purchase.add_theme_constant_override("icon_max_width",24)
+	purchase.disabled = installed or harvest[resource] < cost
+
+func buy_break_upgrade(level: int) -> void:
+	var cost := 8*level
+	if level != rock_break_level+1 or harvest.c < cost: return
+	harvest.c -= cost
+	rock_break_level = level
+	update_ui()
+	show_shop()
+
+func buy_reach_upgrade(level: int) -> void:
+	var cost := 10*level
+	if level != reach_level+1 or harvest.w < cost: return
+	harvest.w -= cost
+	reach_level = level
+	update_ui()
+	show_shop()
+
+func buy_jump_upgrade() -> void:
+	if jump_unlocked or harvest.w < 15: return
+	harvest.w -= 15
+	jump_unlocked = true
 	update_ui()
 	show_shop()
 
@@ -941,15 +1026,16 @@ func close_overlay() -> void:
 		overlay = null
 
 func show_ending() -> void:
-	var content := modal("A universe in bloom.","Every field harvested. Every little root brought home.\n\nYou gathered %d crops across six space gardens.\nYour scythe: power %d · reach %d.\n\nThanks for tending this corner of the universe." % [total_harvest,power,reach])
+	var content := modal("A universe in bloom.","Every field harvested. Every little root brought home.\n\nYou gathered %d crops across six space gardens.\nYour scythe: break %d / 2 · reach +%d · jump %s.\n\nThanks for tending this corner of the universe." % [total_harvest,rock_break_level,reach_level,"online" if jump_unlocked else "offline"])
 	button("Plant a new beginning",Vector2(30,282),Vector2(490,40),restart,content)
 
 func restart() -> void:
 	close_overlay()
 	states.clear()
 	harvest = {"w":0,"c":0}
-	power = 1
-	reach = 3
+	rock_break_level = 0
+	reach_level = 0
+	jump_unlocked = false
 	total_harvest = 0
 	finished = false
 	load_stage(0)
@@ -972,18 +1058,22 @@ func smoke_test() -> void:
 	assert(harvest.w == 16-crops.size() and harvest.c == 0,"Separate crop inventory")
 	reset_field()
 	assert(crops.size() == 16 and harvest.w == 0 and harvest.c == 0 and total_harvest == 0,"Reset refunds only this field's crops")
-	buy_upgrade(true)
-	buy_upgrade(false)
-	assert(power == 1 and reach == 3 and harvest.w == 0 and harvest.c == 0,"Unaffordable purchases preserve inventory")
+	buy_break_upgrade(1)
+	buy_reach_upgrade(1)
+	buy_jump_upgrade()
+	assert(rock_break_level == 0 and reach_level == 0 and not jump_unlocked and harvest.w == 0 and harvest.c == 0,"Unaffordable purchases preserve inventory")
 	for index in LEVELS.size():
 		load_stage(index)
 		if is_shop():
 			harvest = {"w":1000,"c":1000}
-			var before := power
-			if power<3:
-				buy_upgrade(true)
-				assert(power == before+1,"Strength purchase")
-			buy_upgrade(false)
+			var before := rock_break_level
+			if rock_break_level < 2:
+				buy_break_upgrade(rock_break_level+1)
+				assert(rock_break_level == before+1,"Rock-breaking purchase")
+			if reach_level < 2:
+				buy_reach_upgrade(reach_level+1)
+			if not jump_unlocked:
+				buy_jump_upgrade()
 			continue
 		if index in [4,7]:
 			assert(not tiles.has(Vector2i(5,4)),"Bridge starts closed")
