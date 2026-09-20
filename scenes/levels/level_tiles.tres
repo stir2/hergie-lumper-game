@@ -1,137 +1,81 @@
-[gd_resource type="MeshLibrary" format=3 uid="uid://b8v7rovmhlrqv"]
+[gd_resource type="MeshLibrary" format=3]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ltawb"]
-shading_mode = 0
-albedo_color = Color(0.2509804, 0.3529412, 0.27058825, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_avw2s"]
-material = SubResource("StandardMaterial3D_ltawb")
-size = Vector3(1, 0.12, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f2sv8"]
-shading_mode = 0
-albedo_color = Color(0.09019608, 0.11372549, 0.1882353, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_raaav"]
-material = SubResource("StandardMaterial3D_f2sv8")
-size = Vector3(1, 0.12, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tfmyh"]
-shading_mode = 0
-albedo_color = Color(0.42745098, 0.47058824, 0.5294118, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_xdwyk"]
-material = SubResource("StandardMaterial3D_tfmyh")
-size = Vector3(1, 0.12, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7m3tj"]
-shading_mode = 0
-albedo_color = Color(0.9372549, 0.8352941, 0.5803922, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_i5lpm"]
-material = SubResource("StandardMaterial3D_7m3tj")
-size = Vector3(1, 0.12, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hclbq"]
-shading_mode = 0
-albedo_color = Color(0.6509804, 0.9019608, 0.78039217, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_nsltx"]
-material = SubResource("StandardMaterial3D_hclbq")
-size = Vector3(1, 0.12, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cwlpd"]
-shading_mode = 0
-albedo_color = Color(0.84313726, 0.7019608, 0.32941177, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_n41ci"]
-material = SubResource("StandardMaterial3D_cwlpd")
-size = Vector3(1, 0.12, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5dgqm"]
-shading_mode = 0
-albedo_color = Color(0.9411765, 0.60784316, 0.3137255, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_ktbji"]
-material = SubResource("StandardMaterial3D_5dgqm")
-size = Vector3(1, 0.12, 1)
+[ext_resource type="ArrayMesh" path="res://Meshes/Jefferson/DirtTile.tres" id="1_i5lpm"]
+[ext_resource type="Texture2D" path="res://assets/panorama_image.webp" id="2_hclbq"]
+[ext_resource type="ArrayMesh" path="res://Meshes/Jefferson/RockPlain2.tres" id="3_nsltx"]
+[ext_resource type="ArrayMesh" path="res://Meshes/Kevin/Telepole.tres" id="4_cwlpd"]
+[ext_resource type="ArrayMesh" path="res://Meshes/Kevin/Railing1.tres" id="5_n41ci"]
+[ext_resource type="ArrayMesh" path="res://Meshes/Jefferson/WheatFull.tres" id="6_5dgqm"]
+[ext_resource type="ArrayMesh" path="res://Meshes/Jefferson/Carrot3.tres" id="7_ktbji"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_msone"]
 shading_mode = 0
-albedo_color = Color(0.8862745, 0.43137255, 0.33333334, 1)
+albedo_texture = ExtResource("2_hclbq")
 
-[sub_resource type="BoxMesh" id="BoxMesh_dkqqx"]
+[sub_resource type="PlaneMesh" id="PlaneMesh_dkqqx"]
 material = SubResource("StandardMaterial3D_msone")
-size = Vector3(1, 0.12, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ovtdq"]
-shading_mode = 0
-albedo_color = Color(0.7019608, 0.42745098, 0.80784315, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_moo07"]
-material = SubResource("StandardMaterial3D_ovtdq")
-size = Vector3(1, 0.12, 1)
+size = Vector2(1, 1)
 
 [resource]
 item/0/name = "Floor"
-item/0/mesh = SubResource("BoxMesh_avw2s")
-item/0/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/0/mesh = ExtResource("1_i5lpm")
+item/0/mesh_transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 0.9999999, 0, 0.03731178, 0)
 item/0/mesh_cast_shadow = 1
 item/0/shapes = []
 item/0/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/0/navigation_layers = 1
 item/1/name = "Void"
-item/1/mesh = SubResource("BoxMesh_raaav")
+item/1/mesh = SubResource("PlaneMesh_dkqqx")
 item/1/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/1/mesh_cast_shadow = 1
 item/1/shapes = []
 item/1/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/1/navigation_layers = 1
 item/2/name = "Rock"
-item/2/mesh = SubResource("BoxMesh_xdwyk")
-item/2/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/2/mesh = ExtResource("3_nsltx")
+item/2/mesh_transform = Transform3D(1.0274842, 0, 0, 0, 1.0274842, 0, 0, 0, 1.0274842, 0, -0.05278382, 0)
 item/2/mesh_cast_shadow = 1
 item/2/shapes = []
 item/2/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/2/navigation_layers = 1
 item/3/name = "Switch"
-item/3/mesh = SubResource("BoxMesh_i5lpm")
-item/3/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/3/mesh = ExtResource("4_cwlpd")
+item/3/mesh_transform = Transform3D(0.24691355, 0, 0, 0, 0.24691355, 0, 0, 0, 0.24691355, 0, 0.041671455, 0)
 item/3/mesh_cast_shadow = 1
 item/3/shapes = []
 item/3/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/3/navigation_layers = 1
 item/4/name = "Bridge"
-item/4/mesh = SubResource("BoxMesh_nsltx")
-item/4/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/4/mesh = ExtResource("5_n41ci")
+item/4/mesh_transform = Transform3D(0.45257217, 0, 0, 0, 0.45257217, 0, 0, 0, 0.45257217, 0, 0.17476405, 0)
 item/4/mesh_cast_shadow = 1
 item/4/shapes = []
 item/4/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/4/navigation_layers = 1
 item/5/name = "Wheat"
-item/5/mesh = SubResource("BoxMesh_n41ci")
-item/5/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/5/mesh = ExtResource("6_5dgqm")
+item/5/mesh_transform = Transform3D(0.79585075, 0, 0, 0, 0.79585075, 0, 0, 0, 0.79585075, 0, -0.014857188, 0)
 item/5/mesh_cast_shadow = 1
 item/5/shapes = []
 item/5/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/5/navigation_layers = 1
 item/6/name = "Tough Wheat"
-item/6/mesh = SubResource("BoxMesh_ktbji")
-item/6/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/6/mesh = ExtResource("6_5dgqm")
+item/6/mesh_transform = Transform3D(0.79585075, 0, 0, 0, 0.79585075, 0, 0, 0, 0.79585075, 0, -0.014857188, 0)
 item/6/mesh_cast_shadow = 1
 item/6/shapes = []
 item/6/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/6/navigation_layers = 1
 item/7/name = "Carrot"
-item/7/mesh = SubResource("BoxMesh_dkqqx")
-item/7/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/7/mesh = ExtResource("7_ktbji")
+item/7/mesh_transform = Transform3D(0.9956659, 0, 0, 0, 0.9956659, 0, 0, 0, 0.9956659, 0, 0.01953398, 0)
 item/7/mesh_cast_shadow = 1
 item/7/shapes = []
 item/7/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/7/navigation_layers = 1
 item/8/name = "Tough Carrot"
-item/8/mesh = SubResource("BoxMesh_moo07")
-item/8/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/8/mesh = ExtResource("7_ktbji")
+item/8/mesh_transform = Transform3D(0.9956659, 0, 0, 0, 0.9956659, 0, 0, 0, 0.9956659, 0, 0.01953398, 0)
 item/8/mesh_cast_shadow = 1
 item/8/shapes = []
 item/8/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
