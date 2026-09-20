@@ -1,4 +1,4 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://cngfm7denpjvo"]
 
 [ext_resource type="Material" path="res://Materials/WoodTile1.tres" id="1_2gubq"]
 [ext_resource type="Material" path="res://Materials/BrickTexture.tres" id="2_846fh"]

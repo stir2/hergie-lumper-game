@@ -1,4 +1,4 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://ckhwh48nvq2kt"]
 
 [ext_resource type="Material" path="res://Materials/MetalTile2.tres" id="1_ksp8p"]
 [ext_resource type="Material" path="res://Materials/MetalTile1.tres" id="2_1wgit"]

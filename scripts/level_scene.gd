@@ -21,6 +21,17 @@ const TILE_KINDS := {
 	Tile.TOUGH_CARROT: "C"
 }
 
+const DECORATION_ASSETS := {
+	9: {"asset": "res://Meshes/Jefferson/RockTitanium3.tres", "size": 0.94},
+	10: {"asset": "res://Meshes/Kevin/Glass1.tres", "size": 0.9},
+	11: {"asset": "res://Meshes/Kevin/Railing1.tres", "size": 0.9},
+	12: {"asset": "res://Meshes/Kevin/BrickBuilding1.tres", "size": 1.35},
+	13: {"asset": "res://Meshes/Kevin/BrickBuilding2.tres", "size": 1.35},
+	14: {"asset": "res://Meshes/Kevin/BrickBuilding3.tres", "size": 1.35},
+	15: {"asset": "res://Meshes/Kevin/ConcreteBuilding1.tres", "size": 1.35},
+	16: {"asset": "res://Meshes/Kevin/ConcreteBuilding2.tres", "size": 1.35}
+}
+
 func _ready() -> void:
 	if not Engine.is_editor_hint():
 		grid_map().visible = false
@@ -44,6 +55,15 @@ func crop_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	for tile in [Tile.WHEAT, Tile.TOUGH_WHEAT, Tile.CARROT, Tile.TOUGH_CARROT]:
 		cells.append_array(cells_in(tile))
+	return cells
+
+func decorations() -> Array[Dictionary]:
+	var cells: Array[Dictionary] = []
+	for grid_cell in grid_map().get_used_cells():
+		var tile := grid_map().get_cell_item(grid_cell)
+		if DECORATION_ASSETS.has(tile):
+			var decoration: Dictionary = DECORATION_ASSETS[tile]
+			cells.append({"cell": Vector2i(grid_cell.x+5, grid_cell.z+4), "asset": decoration.asset, "size": decoration.size})
 	return cells
 
 func grid_map() -> GridMap:

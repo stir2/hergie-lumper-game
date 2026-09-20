@@ -534,6 +534,8 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	if states.has(stage):
 		crops = states[stage].crops.duplicate(true)
 		if states[stage].bridge: open_bridge()
+	for decoration in current_level.decorations():
+		asset(board,decoration.asset,grid_pos(decoration.cell),decoration.size)
 	for c in crops:
 		var crop_kind: String = crops[c].kind
 		var file := "WheatFull" if crop_kind.to_lower() == "w" else "Carrot3"

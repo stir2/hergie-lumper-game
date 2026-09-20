@@ -1,4 +1,4 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://bepwo6n7fctl"]
 
 [ext_resource type="Material" path="res://Materials/RoofTile1.tres" id="1_sscbq"]
 [ext_resource type="Material" path="res://Materials/ConcreteTrim2.tres" id="2_8lqor"]
