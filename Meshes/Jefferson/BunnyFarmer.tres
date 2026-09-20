@@ -1,4 +1,4 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://2mj34cgl88tk"]
 
 [ext_resource type="Material" path="res://Materials/Atlas1.tres" id="1_sfuy3"]
 

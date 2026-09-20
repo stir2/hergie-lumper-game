@@ -3,6 +3,7 @@ extends Node
 const RENDER_SCALE := 2.0
 const CHARGE_SECONDS := 0.9
 const MIN_THROW_DISTANCE := 1.0
+const BUNNY_ROTATION_OFFSET := -PI / 2.0
 const W := 11
 const H := 9
 const MINT := Color("a6e6c7")
@@ -38,6 +39,7 @@ var world: Node3D
 var board: Node3D
 var bunny: Node3D
 var bunny_model: Node3D
+var hand_anchor: Node3D
 var camera: Camera3D
 var view: SubViewport
 var view_container: SubViewportContainer
@@ -203,9 +205,15 @@ func build_world() -> void:
 	asset(bunny_model,"res://Meshes/Jefferson/BunnyFarmer.tres",Vector3.ZERO,1.02)
 	# A little oxygen pack marks our space farmer.
 	box(bunny_model,Vector3(0,0.40,0.27),Vector3(0.30,0.36,0.18),Color("74acac"))
+	hand_anchor = Node3D.new()
+	bunny_model.add_child(hand_anchor)
+	# Hand attachment point for the held scythe. Adjust these values if needed
+	# to fine-tune the grip position for BunnyFarmer.tres.
+	hand_anchor.position = Vector3(.30,0.2,0.30)
+	hand_anchor.rotation_degrees = Vector3(0,0,180)
 	held = make_scythe()
-	bunny.add_child(held)
-	held.position = Vector3(0.4,0.55,0)
+	hand_anchor.add_child(held)
+	held.position = Vector3.ZERO
 	held.scale = Vector3.ONE*0.8
 	scythe = make_scythe()
 	world.add_child(scythe)
@@ -371,7 +379,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	board.add_child(arrow)
 	cell = Vector2i(9,4) if from_right else Vector2i(1,4)
 	bunny.position = grid_pos(cell)
-	bunny_model.rotation = Vector3.ZERO
+	bunny_model.rotation = Vector3(0, BUNNY_ROTATION_OFFSET, 0)
 	transition_lock = 0.6
 	if is_shop():
 		asset(board,"res://Meshes/Kevin/Greenhouse.tres",Vector3(0,0,-2),3.7)
@@ -497,7 +505,7 @@ func throw_scythe(target: Vector3, distance: float = -1.0) -> void:
 	scythe.position = shot_origin
 	scythe.visible = true
 	held.visible = false
-	bunny_model.rotation.y = atan2(shot_dir.x,shot_dir.z)
+	bunny_model.rotation.y = atan2(shot_dir.x,shot_dir.z) + BUNNY_ROTATION_OFFSET
 	if not muted: throw_audio.play()
 
 func hit_crop(c: Vector2i) -> void:
@@ -537,7 +545,7 @@ func _process(dt: float) -> void:
 		var target := grid_pos(path[0])
 		var delta := target-bunny.position
 		bunny.position = bunny.position.move_toward(target,dt*4.5)
-		bunny_model.rotation.y = lerp_angle(bunny_model.rotation.y,atan2(delta.x,delta.z),dt*14)
+		bunny_model.rotation.y = lerp_angle(bunny_model.rotation.y,atan2(delta.x,delta.z) + BUNNY_ROTATION_OFFSET,dt*14)
 		bunny_model.position.y = absf(sin(time*17))*0.11
 		bunny_model.rotation.z = sin(time*17)*0.045
 		if bunny.position.distance_to(target)<0.015:
@@ -596,7 +604,7 @@ func update_aim() -> void:
 	direction.y = 0
 	if direction.length_squared()<0.01: return
 	direction = direction.normalized()
-	bunny_model.rotation.y = atan2(direction.x,direction.z)
+	bunny_model.rotation.y = atan2(direction.x,direction.z) + BUNNY_ROTATION_OFFSET
 	var distance := charged_distance()
 	for i in aim_markers.size():
 		var offset := float(i+1)*float(reach)/aim_markers.size()
