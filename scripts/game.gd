@@ -37,6 +37,8 @@ var path: Array[Vector2i] = []
 var cell := Vector2i(0,4)
 var world: Node3D
 var board: Node3D
+var background_ruins: Node3D
+var floating_ruins: Array[Node3D] = []
 var bunny: Node3D
 var bunny_model: Node3D
 var hand_anchor: Node3D
@@ -46,6 +48,9 @@ var view_container: SubViewportContainer
 var back_buffer_copy: BackBufferCopy
 var post_process: ColorRect
 var ui: Control
+var hud: Control
+var title_menu: Control
+var title_active := false
 var wheat_total: Label
 var carrot_total: Label
 var equipment: Label
@@ -77,8 +82,9 @@ var transition_lock := 0.0
 func _ready() -> void:
 	build_world()
 	build_ui()
-	build_post_process()
 	load_stage(0)
+	show_title()
+	build_post_process()
 	if "--input-check" in OS.get_cmdline_user_args():
 		var checker := Node.new()
 		checker.set_script(load("res://tests/input_check.gd"))
@@ -165,14 +171,14 @@ func build_world() -> void:
 	bg.set_script(load("res://scripts/space.gd"))
 	add_child(bg)
 	view_container = SubViewportContainer.new()
-	view_container.position = Vector2(280,126)
-	view_container.size = Vector2(970,578) * RENDER_SCALE
+	view_container.position = Vector2.ZERO
+	view_container.size = Vector2(1280,800) * RENDER_SCALE
 	view_container.scale = Vector2.ONE / RENDER_SCALE
 	view_container.stretch = false
 	view_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(view_container)
 	view = SubViewport.new()
-	view.size = Vector2i(Vector2(970,578) * RENDER_SCALE)
+	view.size = Vector2i(Vector2(1280,800) * RENDER_SCALE)
 	view.transparent_bg = true
 	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	view.msaa_3d = Viewport.MSAA_4X
@@ -196,11 +202,12 @@ func build_world() -> void:
 	camera = Camera3D.new()
 	world.add_child(camera)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 10.5
+	camera.size = 9.6
 	camera.position = Vector3(11,15,16)
 	camera.look_at(Vector3(0,0,0))
 	board = Node3D.new()
 	world.add_child(board)
+	build_background_ruins()
 	bunny = Node3D.new()
 	world.add_child(bunny)
 	bunny_model = Node3D.new()
@@ -212,16 +219,20 @@ func build_world() -> void:
 	bunny_model.add_child(hand_anchor)
 	# Hand attachment point for the held scythe. Adjust these values if needed
 	# to fine-tune the grip position for BunnyFarmer.tres.
-	hand_anchor.position = Vector3(0.35,0.55,-0.10)
-	hand_anchor.rotation_degrees = Vector3(0,0,20)
-	held = make_scythe()
+	hand_anchor.position = Vector3(.30,0.2,0.30)
+	hand_anchor.rotation_degrees = Vector3(0,0,180)
+	held = make_scythe(true)
 	hand_anchor.add_child(held)
 	held.position = Vector3.ZERO
 	held.scale = Vector3.ONE*0.8
 	scythe = make_scythe()
 	world.add_child(scythe)
 	scythe.visible = false
-	hover = box(world,Vector3.ZERO,Vector3(0.94,0.025,0.94),MINT)
+	hover = box(world,Vector3.ZERO,Vector3(0.82,0.025,0.82),MINT)
+	var hover_material := hover.material_override as StandardMaterial3D
+	hover_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	hover_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	hover_material.albedo_color = Color(0.65,0.90,0.78,0.5)
 	hover.visible = false
 	for i in 18:
 		var dot := box(world,Vector3.ZERO,Vector3(0.055,0.045,0.055),GOLD,0.6)
@@ -259,16 +270,72 @@ func build_post_process() -> void:
 	add_child(post_process)
 
 
-func make_scythe() -> Node3D:
+func make_scythe(pivot_at_handle: bool = false) -> Node3D:
 	var root := Node3D.new()
 	var packed: PackedScene = load("res://Imported/GLB/Jefferson/scythe.glb")
 	var model := packed.instantiate() as Node3D
 	root.add_child(model)
 	model.scale = Vector3.ONE*0.75
 	model.rotation_degrees = Vector3(0,0,90)
+	# After the visual rotation, the lower handle end lies along local +X.
+	# Offset the held mesh so its handle, rather than its imported center, is the pivot.
+	if pivot_at_handle:
+		model.position.x = -0.20
 	for child in model.find_children("*", "MeshInstance3D"):
 		child.material_override = material(Color("b9dfd0"),0.1)
 	return root
+
+func floating_ruin(file: String, pos: Vector3, target_size: float, orientation: Vector3, spin: Vector3, drift: Vector3, phase: float) -> void:
+	var pivot := Node3D.new()
+	background_ruins.add_child(pivot)
+	pivot.position = pos
+	pivot.rotation_degrees = orientation
+	pivot.set_meta("base_position",pos)
+	pivot.set_meta("spin",spin)
+	pivot.set_meta("drift",drift)
+	pivot.set_meta("phase",phase)
+	asset(pivot,file,Vector3.ZERO,target_size)
+	floating_ruins.append(pivot)
+
+func build_background_ruins() -> void:
+	background_ruins = Node3D.new()
+	world.add_child(background_ruins)
+	# Large nearby wrecks frame the farm; smaller silhouettes recede into the sky.
+	floating_ruin("res://Meshes/Kevin/ConcreteBuilding1.tres",Vector3(-7.4,-1.0,-5.2),1.80,Vector3(11,-23,17),Vector3(0.05,0.12,-0.04),Vector3(0.45,0.20,-0.25),0.2)
+	floating_ruin("res://Meshes/Kevin/BrickBuilding3.tres",Vector3(7.5,-1.6,-5.8),1.65,Vector3(-14,28,-10),Vector3(-0.04,-0.10,0.06),Vector3(-0.35,0.16,0.32),1.1)
+	floating_ruin("res://Meshes/Kevin/ConcreteBuilding2.tres",Vector3(-2.0,-2.2,-8.8),1.05,Vector3(34,-12,23),Vector3(0.06,0.08,0.03),Vector3(0.18,-0.24,0.42),2.4)
+	floating_ruin("res://Meshes/Kevin/BrickBuilding2.tres",Vector3(8.9,-2.4,-2.6),1.15,Vector3(-28,42,16),Vector3(-0.05,0.07,-0.04),Vector3(-0.40,0.23,-0.15),3.0)
+	floating_ruin("res://Meshes/Kevin/ConcretePillar3.tres",Vector3(-8.8,-2.0,0.5),0.90,Vector3(66,18,-35),Vector3(0.09,-0.05,0.07),Vector3(0.26,0.31,0.12),3.8)
+	floating_ruin("res://Meshes/Kevin/Railing1.tres",Vector3(7.8,-2.7,1.8),0.82,Vector3(31,-38,42),Vector3(-0.07,0.08,0.05),Vector3(-0.18,-0.20,0.36),4.6)
+	floating_ruin("res://Meshes/Jefferson/ConcreteDebris.tres",Vector3(-5.6,-2.6,-7.4),0.78,Vector3(43,9,61),Vector3(0.10,0.06,-0.08),Vector3(0.35,-0.18,0.20),5.1)
+	floating_ruin("res://Meshes/Jefferson/Debris2.tres",Vector3(4.6,-2.9,-8.0),0.62,Vector3(-22,48,31),Vector3(-0.08,0.11,0.04),Vector3(-0.28,0.25,-0.30),0.8)
+	floating_ruin("res://Meshes/Jefferson/RockTitanium2.tres",Vector3(-9.5,-2.8,-3.4),0.72,Vector3(17,-31,29),Vector3(0.04,0.09,0.07),Vector3(0.20,0.12,-0.38),1.7)
+	floating_ruin("res://Meshes/Jefferson/RockPlain3.tres",Vector3(10.2,-3.1,-4.4),0.54,Vector3(-31,24,-44),Vector3(-0.06,0.05,-0.09),Vector3(-0.32,-0.16,0.18),2.8)
+	floating_ruin("res://Meshes/Kevin/ConcretePillar2.tres",Vector3(-10.4,-3.0,-6.9),0.92,Vector3(29,54,-17),Vector3(0.08,-0.06,0.10),Vector3(0.22,0.28,0.35),4.0)
+	floating_ruin("res://Meshes/Kevin/BrickBuilding1.tres",Vector3(9.6,-3.2,-8.4),0.76,Vector3(-41,13,38),Vector3(-0.09,0.07,-0.06),Vector3(-0.38,0.17,-0.22),5.5)
+	floating_ruin("res://Meshes/Kevin/ConcretePillar1.tres",Vector3(-6.8,-3.4,2.8),0.58,Vector3(73,-24,19),Vector3(0.11,0.04,-0.07),Vector3(0.16,-0.26,0.27),1.5)
+	floating_ruin("res://Meshes/Kevin/BrickPillar1.tres",Vector3(10.8,-3.5,0.2),0.62,Vector3(-19,47,56),Vector3(-0.05,0.10,0.08),Vector3(-0.24,0.21,0.14),2.1)
+	floating_ruin("res://Meshes/Jefferson/RockTitanium1.tres",Vector3(-3.8,-3.6,-10.6),0.50,Vector3(34,-48,-22),Vector3(0.07,-0.08,0.09),Vector3(0.30,0.14,-0.18),3.3)
+	floating_ruin("res://Meshes/Jefferson/RockPlain2.tres",Vector3(5.5,-3.8,-10.2),0.42,Vector3(-62,21,44),Vector3(-0.10,0.05,-0.04),Vector3(-0.16,0.29,0.24),4.9)
+	# Lower, farther pieces keep the void around the near edge from feeling empty.
+	floating_ruin("res://Meshes/Kevin/ConcreteBuilding1.tres",Vector3(-10.8,-5.0,-3.4),1.08,Vector3(48,-37,29),Vector3(0.06,0.09,-0.05),Vector3(0.31,0.22,0.18),0.6)
+	floating_ruin("res://Meshes/Kevin/BrickBuilding1.tres",Vector3(-6.8,-6.0,-3.0),0.84,Vector3(-33,26,51),Vector3(-0.08,0.04,0.10),Vector3(-0.26,0.30,-0.16),1.9)
+	floating_ruin("res://Meshes/Kevin/ConcretePillar2.tres",Vector3(-9.8,-5.7,-0.3),0.62,Vector3(71,12,-39),Vector3(0.10,-0.07,0.06),Vector3(0.22,-0.18,0.29),2.7)
+	floating_ruin("res://Meshes/Jefferson/Debris2.tres",Vector3(-5.1,-6.5,-6.5),0.72,Vector3(24,58,-36),Vector3(-0.06,0.11,-0.08),Vector3(-0.34,0.24,0.20),3.6)
+	floating_ruin("res://Meshes/Jefferson/ConcreteDebris.tres",Vector3(-11.8,-5.8,1.8),0.56,Vector3(-47,19,63),Vector3(0.09,0.05,0.07),Vector3(0.17,0.27,-0.25),4.4)
+	floating_ruin("res://Meshes/Jefferson/RockTitanium1.tres",Vector3(-7.2,-5.5,2.4),0.48,Vector3(39,-52,18),Vector3(-0.07,0.08,-0.09),Vector3(-0.21,0.16,0.33),5.2)
+	floating_ruin("res://Meshes/Jefferson/RockPlain3.tres",Vector3(-2.4,-7.0,-8.3),0.52,Vector3(-56,34,27),Vector3(0.08,-0.06,0.05),Vector3(0.29,0.20,-0.17),1.3)
+	floating_ruin("res://Meshes/Kevin/Railing1.tres",Vector3(2.8,-6.2,-8.6),0.50,Vector3(62,-29,45),Vector3(-0.10,0.07,0.04),Vector3(-0.18,0.32,0.21),2.4)
+
+func update_background_ruins(dt: float) -> void:
+	for ruin in floating_ruins:
+		if not is_instance_valid(ruin): continue
+		var spin: Vector3 = ruin.get_meta("spin")
+		var base_position: Vector3 = ruin.get_meta("base_position")
+		var drift: Vector3 = ruin.get_meta("drift")
+		var phase: float = ruin.get_meta("phase")
+		ruin.rotation += spin*dt
+		ruin.position = base_position+drift*sin(time*0.42+phase)
 
 func panel(pos: Vector2, dimensions: Vector2, parent: Node = ui) -> PanelContainer:
 	var p := PanelContainer.new()
@@ -316,13 +383,19 @@ func build_ui() -> void:
 	ui = Control.new()
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(ui)
-	crop_icon("wheat",Vector2(982,32),Vector2(42,52),ui)
-	wheat_total = label_at("0",Vector2(1040,40),26,GOLD)
-	crop_icon("carrot",Vector2(1110,32),Vector2(48,52),ui)
-	carrot_total = label_at("0",Vector2(1174,40),26,GOLD)
-	label_at("YOUR SCYTHE",Vector2(34,587),11,MUTED)
-	equipment = label_at("",Vector2(34,611),16,MINT)
-	label_at("DEEP SPACE AGRICULTURE  /  EST. 2086",Vector2(930,751),10,MUTED)
+
+	hud = Control.new()
+	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.add_child(hud)
+
+	crop_icon("wheat",Vector2(982,32),Vector2(42,52),hud)
+	wheat_total = label_at("0",Vector2(1040,40),26,GOLD,hud)
+	crop_icon("carrot",Vector2(1110,32),Vector2(48,52),hud)
+	carrot_total = label_at("0",Vector2(1174,40),26,GOLD,hud)
+	label_at("YOUR SCYTHE",Vector2(34,587),11,MUTED,hud)
+	equipment = label_at("",Vector2(34,611),16,MINT,hud)
+	label_at("DEEP SPACE AGRICULTURE  /  EST. 2086",Vector2(930,751),10,MUTED,hud)
 
 func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
 	var icon := TextureRect.new()
@@ -334,6 +407,74 @@ func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) ->
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(icon)
 	return icon
+
+func menu_image(file: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
+	var image := TextureRect.new()
+	image.texture = load(file)
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	image.position = pos
+	image.size = dimensions
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(image)
+	return image
+
+func menu_button(
+	normal_file: String,
+	hover_file: String,
+	pressed_file: String,
+	pos: Vector2,
+	dimensions: Vector2,
+	callback: Callable,
+	parent: Node
+) -> TextureButton:
+	var b := TextureButton.new()
+	b.texture_normal = load(normal_file)
+	b.texture_hover = load(hover_file)
+	b.texture_pressed = load(pressed_file)
+	b.position = pos
+	b.size = dimensions
+	b.ignore_texture_size = true
+	b.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	b.pressed.connect(callback)
+	parent.add_child(b)
+	return b
+
+func show_title() -> void:
+	cancel_charge()
+	path.clear()
+	title_active = true
+	hud.visible = false
+	if is_instance_valid(title_menu): title_menu.queue_free()
+	title_menu = Control.new()
+	ui.add_child(title_menu)
+	title_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	title_menu.mouse_filter = Control.MOUSE_FILTER_STOP
+	var shade := ColorRect.new()
+	shade.color = Color(0.03,0.075,0.11,0.68)
+	shade.position = Vector2.ZERO
+	shade.size = Vector2(1280,800)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title_menu.add_child(shade)
+	menu_image("res://Imported/PNG/Jefferson/Menu-HergieLogoFinal.webp",Vector2(300,74),Vector2(680,306),title_menu)
+	var tagline := label_at("A SPACE-FARMING JOURNEY",Vector2(488,374),16,MINT,title_menu)
+	tagline.size = Vector2(304,28)
+	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	menu_button("res://Imported/PNG/Jefferson/Menu-Start.webp","res://Imported/PNG/Jefferson/Menu-StartHover.webp","res://Imported/PNG/Jefferson/Menu-StartClick.webp",Vector2(465,432),Vector2(350,108),begin_game,title_menu)
+	menu_button("res://Imported/PNG/Jefferson/Menu-Exit.webp","res://Imported/PNG/Jefferson/Menu-ExitHover.webp","res://Imported/PNG/Jefferson/Menu-ExitClick.webp",Vector2(465,552),Vector2(350,108),quit_game,title_menu)
+	var hint := label_at("ESC opens the garden menu during play",Vector2(420,702),13,MUTED,title_menu)
+	hint.size = Vector2(440,24)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+func begin_game() -> void:
+	title_active = false
+	hud.visible = true
+	if is_instance_valid(title_menu):
+		title_menu.queue_free()
+		title_menu = null
+
+func quit_game() -> void:
+	get_tree().quit()
 
 func grid_pos(c: Vector2i) -> Vector3:
 	return Vector3(c.x-5,0,c.y-4)
@@ -486,14 +627,16 @@ func cancel_charge() -> void:
 	charging = false
 	charge_time = 0.0
 	for dot in aim_markers: dot.visible = false
-	if is_instance_valid(held): held.rotation.z = 0.0
+	if is_instance_valid(held): held.rotation.y = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			if finished: return
 			if is_instance_valid(overlay): close_overlay()
-			else: show_pause()
+			else: show_title()
+			return
+		if title_active: return
 		if event.keycode == KEY_R and not is_instance_valid(overlay) and not is_shop(): reset_field()
 		if event.keycode == KEY_M:
 			muted = not muted
@@ -562,11 +705,13 @@ func hit_crop(c: Vector2i) -> void:
 
 func _process(dt: float) -> void:
 	time += dt
+	update_background_ruins(dt)
+	if title_active: return
 	if is_instance_valid(overlay): return
 	transition_lock = maxf(0,transition_lock-dt)
 	if charging:
 		charge_time = minf(CHARGE_SECONDS,charge_time+dt)
-		held.rotation.z = -0.55*(charge_time/CHARGE_SECONDS)
+		held.rotation.y = PI*0.5*(charge_time/CHARGE_SECONDS)
 	if not path.is_empty():
 		var target := grid_pos(path[0])
 		var delta := target-bunny.position
@@ -580,6 +725,13 @@ func _process(dt: float) -> void:
 	else:
 		bunny_model.position.y = sin(time*2)*0.018
 		bunny_model.rotation.z = 0
+		if not shot_active and not charging:
+			var mouse_target = mouse_world()
+			if mouse_target != null:
+				var look_direction: Vector3 = mouse_target-bunny.position
+				look_direction.y = 0
+				if look_direction.length_squared() > 0.01:
+					bunny_model.rotation.y = lerp_angle(bunny_model.rotation.y,atan2(look_direction.x,look_direction.z) + BUNNY_ROTATION_OFFSET,dt*14)
 	if transition_lock == 0 and path.is_empty() and not shot_active and not charging:
 		if cell == Vector2i(10,4) and crops.is_empty():
 			next_stage()
@@ -619,7 +771,7 @@ func update_aim() -> void:
 	hover.visible = false
 	if is_shop() or is_instance_valid(overlay): return
 	var point = mouse_world()
-	if point != null:
+	if point != null and not charging:
 		var c := Vector2i(roundi(point.x)+5,roundi(point.z)+4)
 		if tiles.has(c):
 			hover.visible = true
@@ -721,10 +873,6 @@ func close_overlay() -> void:
 	if is_instance_valid(overlay):
 		overlay.free()
 		overlay = null
-
-func show_pause() -> void:
-	var content := modal("A moment among the stars","Paused")
-	button("Back to the garden",Vector2(30,282),Vector2(490,40),close_overlay,content)
 
 func show_ending() -> void:
 	var content := modal("A universe in bloom.","Every field harvested. Every little root brought home.\n\nYou gathered %d crops across six space gardens.\nYour scythe: power %d · reach %d.\n\nThanks for tending this corner of the universe." % [total_harvest,power,reach])
