@@ -1,5 +1,7 @@
 extends Node
 
+@export var instruction_font: Font = preload("res://assets/fonts/Futurot.ttf")
+
 const RENDER_SCALE := 2.0
 const CHARGE_SECONDS := 0.9
 const MIN_THROW_DISTANCE := 1.0
@@ -63,6 +65,7 @@ var tile_nodes: Dictionary = {}
 var crop_nodes: Dictionary = {}
 var shop_tiles: Dictionary = {}
 var shop_marker_materials: Dictionary = {}
+var current_shop_number := 0
 var path: Array[Vector2i] = []
 var cell := Vector2i(0,4)
 var hop_active := false
@@ -83,6 +86,7 @@ var back_buffer_copy: BackBufferCopy
 var post_process: ColorRect
 var ui: Control
 var hud: Control
+var first_level_instructions: Control
 var title_menu: Control
 var title_active := false
 var wheat_total: Label
@@ -446,6 +450,18 @@ func build_ui() -> void:
 	titanium_icon.visible = false
 	titanium_total.visible = false
 
+	first_level_instructions = Control.new()
+	first_level_instructions.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(first_level_instructions)
+	instruction_label("Left click a tile to move",Vector2(32,32))
+	instruction_label("Hold & release right click to throw",Vector2(32,66))
+
+func instruction_label(text: String, pos: Vector2) -> Label:
+	var instruction := label_at(text,pos,18,WHITE,first_level_instructions)
+	if instruction_font:
+		instruction.add_theme_font_override("font",instruction_font)
+	return instruction
+
 func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
 	var icon := TextureRect.new()
 	icon.texture = load("res://assets/icons/"+crop+".png")
@@ -609,10 +625,25 @@ func is_shop() -> bool:
 func has_shop() -> bool:
 	return not shop_tiles.is_empty()
 
+func shop_number() -> int:
+	return current_shop_number
+
+func update_shop_number() -> void:
+	current_shop_number = 0
+	for index in range(stage+1):
+		var level := LEVELS[index].instantiate() as LevelScene
+		if level.shop: current_shop_number += 1
+		level.free()
+
 func can_afford_any_upgrade() -> bool:
-	return (rock_break_level < 2 and harvest.c >= 8*(rock_break_level+1)) \
-		or (reach_level < 2 and harvest.w >= 10*(reach_level+1)) \
-		or (not jump_unlocked and harvest.t >= 50)
+	match shop_number():
+		1:
+			return (rock_break_level < 1 and harvest.c >= 8) or (reach_level < 1 and harvest.w >= 10)
+		2:
+			return (rock_break_level < 2 and harvest.c >= 16) or (reach_level < 2 and harvest.w >= 20)
+		3:
+			return not jump_unlocked and harvest.t >= 50
+	return false
 
 func make_shop_marker(c: Vector2i) -> void:
 	var overlay := MeshInstance3D.new()
@@ -676,6 +707,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	bridge_open = false
 	close_shop()
 	current_level = LEVELS[stage].instantiate()
+	update_shop_number()
 	board.add_child(current_level)
 	for z in H:
 		for x in W:
@@ -718,14 +750,6 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	gate = box(board,grid_pos(Vector2i(10,4))+Vector3(0,0.02,0),Vector3(0.83,0.06,0.83),MINT,0.5)
 	if stage > 0:
 		box(board,grid_pos(Vector2i(0,4))+Vector3(0,0.02,0),Vector3(0.83,0.06,0.83),Color("7e9ba7"),0.25)
-	var arrow := Label3D.new()
-	arrow.text = "→"
-	arrow.font_size = 80
-	arrow.pixel_size = 0.009
-	arrow.position = grid_pos(Vector2i(10,4))+Vector3(0,0.65,0)
-	arrow.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	arrow.modulate = MINT
-	board.add_child(arrow)
 	cell = Vector2i(9,4) if from_right else Vector2i(1,4)
 	bunny.position = grid_pos(cell)
 	bunny_model.rotation = Vector3(0, BUNNY_ROTATION_OFFSET, 0)
@@ -735,6 +759,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 		for x in range(4,7):
 			for z in range(1,4):
 				scenery_blockers[Vector2i(x,z)] = true
+	first_level_instructions.visible = stage == 0
 	update_ui()
 
 func update_ui() -> void:
@@ -1153,11 +1178,15 @@ func show_shop() -> void:
 	shop_panel.add_child(content)
 	label_at("THE GREENHOUSE EXCHANGE",Vector2(20,14),12,MINT,content)
 	button("Close",Vector2(535,10),Vector2(60,28),dismiss_shop,content)
-	shop_upgrade_row(content,42,"Break Rock  ·  Level 1","Shatter ordinary stone",8,"c",rock_break_level >= 1,func(): buy_break_upgrade(1))
-	shop_upgrade_row(content,108,"Break Titanium  ·  Level 2","Shatter titanium stone",16,"c",rock_break_level >= 2,func(): buy_break_upgrade(2))
-	shop_upgrade_row(content,174,"Scythe Reach  ·  Level 1","+1 tile throwing distance",10,"w",reach_level >= 1,func(): buy_reach_upgrade(1))
-	shop_upgrade_row(content,240,"Scythe Reach  ·  Level 2","+1 tile throwing distance",20,"w",reach_level >= 2,func(): buy_reach_upgrade(2))
-	shop_upgrade_row(content,306,"Jumping","Cross one void tile",50,"t",jump_unlocked,buy_jump_upgrade)
+	match shop_number():
+		1:
+			shop_upgrade_row(content,92,"Break Rock  ·  Level 1","Shatter ordinary stone",8,"c",rock_break_level >= 1,func(): buy_break_upgrade(1))
+			shop_upgrade_row(content,188,"Scythe Reach  ·  Level 1","+1 tile throwing distance",10,"w",reach_level >= 1,func(): buy_reach_upgrade(1))
+		2:
+			shop_upgrade_row(content,92,"Break Titanium  ·  Level 2","Shatter titanium stone",16,"c",rock_break_level >= 2,func(): buy_break_upgrade(2))
+			shop_upgrade_row(content,188,"Scythe Reach  ·  Level 2","+1 tile throwing distance",20,"w",reach_level >= 2,func(): buy_reach_upgrade(2))
+		3:
+			shop_upgrade_row(content,140,"Jumping","Cross one void tile",50,"t",jump_unlocked,buy_jump_upgrade)
 
 func shop_upgrade_row(content: Control, y: float, title: String, detail: String, cost: int, resource: String, installed: bool, action: Callable) -> void:
 	label_at(title,Vector2(20,y),18,WHITE,content)
@@ -1261,7 +1290,7 @@ func smoke_test() -> void:
 				assert(rock_break_level == before+1,"Rock-breaking purchase")
 			if reach_level < 2:
 				buy_reach_upgrade(reach_level+1)
-			if not jump_unlocked:
+			if shop_number() == 3 and not jump_unlocked:
 				buy_jump_upgrade()
 			continue
 		if index in [4,17]:
