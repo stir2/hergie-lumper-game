@@ -158,14 +158,7 @@ func asset(parent: Node3D, file: String, pos: Vector3, target_size: float) -> Me
 	if "Wheat" in file:
 		n.material_override = material(Color("d7b354"))
 	if "Greenhouse.tres" in file:
-		var colors := [Color("397b75"),Color("b9c596"),Color("80c9bd"),Color("63976c")]
-		for surface in n.mesh.get_surface_count():
-			var mat := material(colors[surface % colors.size()])
-			if surface == 2:
-				mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-				mat.albedo_color.a = 0.55
-				mat.roughness = 0.2
-			n.set_surface_override_material(surface,mat)
+		n.material_override = load("res://Materials/Atlas1.tres")
 	var bounds := n.mesh.get_aabb()
 	var factor := target_size / maxf(bounds.size.x,maxf(bounds.size.y,bounds.size.z))
 	n.scale = Vector3.ONE * factor
@@ -662,6 +655,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			else: show_title()
 			return
 		if title_active: return
+		if event.keycode == KEY_6 and stage > 0:
+			finished = false
+			save_stage()
+			load_stage(stage-1,true)
+			return
+		if event.keycode == KEY_7 and stage < LEVELS.size()-1:
+			finished = false
+			save_stage()
+			load_stage(stage+1)
+			return
 		if event.keycode == KEY_R and not is_instance_valid(overlay) and not is_shop(): reset_field()
 		if event.keycode == KEY_M:
 			muted = not muted
