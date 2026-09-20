@@ -13,6 +13,8 @@ const SCYTHE_HITBOX_VERTICAL_PADDING := 0.315
 const BUNNY_ROTATION_OFFSET := -PI / 2.0
 const MUSIC_GAMEPLAY_VOLUME_DB := -14.0
 const MUSIC_MENU_VOLUME_DB := -18.0
+const HARVEST_ICON_SIZE := Vector2(34,34)
+const HUD_INVENTORY_TARGETS := {"w": Vector2(1003,58), "c": Vector2(1134,58)}
 const W := 11
 const H := 9
 const MINT := Color("a6e6c7")
@@ -33,6 +35,7 @@ const LEVELS := [
 var stage := 0
 var current_level
 var harvest := {"w":0,"c":0}
+var displayed_harvest := {"w":0,"c":0}
 var rock_break_level := 0
 var reach_level := 0
 var jump_unlocked := false
@@ -92,6 +95,9 @@ var shot_distance := 0.0
 var shot_speed := 0.0
 var shot_return_start_distance := 0.0
 var shot_hits: Dictionary = {}
+var harvest_icon_sequence := 0
+var harvest_icon_release_time := 0.0
+var harvest_icon_batches: Dictionary = {}
 var time := 0.0
 var bridge_open := false
 var muted := false
@@ -99,6 +105,7 @@ var music_paused := false
 var finished := false
 var cut_audio: AudioStreamPlayer
 var throw_audio: AudioStreamPlayer
+var inventory_audio: AudioStreamPlayer
 var background_music: AudioStreamPlayer
 var transition_lock := 0.0
 
@@ -260,6 +267,10 @@ func build_world() -> void:
 	throw_audio.stream = load("res://Sounds/Scythe/boomerang_loop.wav")
 	throw_audio.volume_db = -24
 	add_child(throw_audio)
+	inventory_audio = AudioStreamPlayer.new()
+	inventory_audio.stream = load("res://Sounds/crop_landing_into_inventory.wav")
+	inventory_audio.volume_db = -12
+	add_child(inventory_audio)
 	background_music = AudioStreamPlayer.new()
 	background_music.stream = load("res://Sounds/Music/f_sonata.mp3")
 	background_music.volume_db = MUSIC_GAMEPLAY_VOLUME_DB
@@ -425,8 +436,67 @@ func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) ->
 	icon.position = pos
 	icon.size = dimensions
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.self_modulate = Color.WHITE
+	var icon_material := CanvasItemMaterial.new()
+	icon_material.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	icon.material = icon_material
 	parent.add_child(icon)
 	return icon
+
+func crop_icon_world_position(c: Vector2i) -> Vector2:
+	return view_container.get_global_transform() * camera.unproject_position(grid_pos(c)+Vector3(0,1.35,0))
+
+func queue_harvest_icon(c: Vector2i, resource: String) -> void:
+	harvest_icon_sequence += 1
+	var key := str(harvest_icon_sequence)
+	var icon := crop_icon("wheat" if resource == "w" else "carrot",Vector2.ZERO,HARVEST_ICON_SIZE,ui)
+	icon.position = crop_icon_world_position(c)-icon.size*0.5
+	icon.pivot_offset = icon.size*0.5
+	var start_delay := 0.14
+	if time < harvest_icon_release_time:
+		start_delay = harvest_icon_release_time-time
+	harvest_icon_release_time = time+start_delay+0.06
+	harvest_icon_batches[key] = {"resource":resource,"icon":icon,"start_delay":start_delay}
+	animate_harvest_icon(key)
+
+func animate_harvest_icon(key: String) -> void:
+	if not harvest_icon_batches.has(key): return
+	var flight: Dictionary = harvest_icon_batches[key]
+	await get_tree().create_timer(flight.start_delay).timeout
+	if not harvest_icon_batches.has(key): return
+	flight = harvest_icon_batches[key]
+	var icon := flight.icon as TextureRect
+	if not is_instance_valid(icon):
+		harvest_icon_batches.erase(key)
+		return
+	var target: Vector2 = HUD_INVENTORY_TARGETS[flight.resource]
+	var flight_duration := clampf(icon.position.distance_to(target)/1100.0,0.28,0.58)
+	var flight_tween := create_tween().set_parallel(true)
+	flight_tween.tween_property(icon,"position",target-icon.size*0.5,flight_duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	flight_tween.tween_property(icon,"scale",Vector2.ONE*0.42,flight_duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await flight_tween.finished
+	if not harvest_icon_batches.has(key): return
+	if is_instance_valid(icon): icon.queue_free()
+	harvest_icon_batches.erase(key)
+	displayed_harvest[flight.resource] += 1
+	refresh_inventory_totals()
+	if not muted:
+		play_inventory_sound()
+
+func clear_harvest_icon_batches() -> void:
+	for flight in harvest_icon_batches.values():
+		var icon := flight.icon as TextureRect
+		if is_instance_valid(icon): icon.queue_free()
+	harvest_icon_batches.clear()
+	harvest_icon_release_time = time
+
+func play_inventory_sound() -> void:
+	var sound := AudioStreamPlayer.new()
+	sound.stream = inventory_audio.stream
+	sound.volume_db = inventory_audio.volume_db
+	add_child(sound)
+	sound.finished.connect(sound.queue_free)
+	sound.play()
 
 func menu_image(file: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
 	var image := TextureRect.new()
@@ -564,6 +634,7 @@ func save_stage() -> void:
 func load_stage(index: int, from_right: bool = false) -> void:
 	cancel_charge()
 	cancel_hop()
+	clear_harvest_icon_batches()
 	stage = index
 	for n in board.get_children():
 		n.free()
@@ -640,10 +711,14 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	update_ui()
 
 func update_ui() -> void:
-	wheat_total.text = str(harvest.w)
-	carrot_total.text = str(harvest.c)
+	displayed_harvest = harvest.duplicate()
+	refresh_inventory_totals()
 	gate.material_override = material(MINT,0.5)
 	update_shop_markers()
+
+func refresh_inventory_totals() -> void:
+	wheat_total.text = str(displayed_harvest.w)
+	carrot_total.text = str(displayed_harvest.c)
 
 func walkable(c: Vector2i) -> bool:
 	return tiles.has(c) and not rocks.has(c) and not crops.has(c) and not scenery_blockers.has(c)
@@ -831,6 +906,7 @@ func hit_crop(c: Vector2i) -> void:
 	var kind: String = crops[c].kind
 	harvest[kind.to_lower()] += 1
 	total_harvest += 1
+	queue_harvest_icon(c,kind.to_lower())
 	crops.erase(c)
 	crop_nodes.erase(c)
 	var remnant_file := "WheatChopped" if kind.to_lower() == "w" else "CarrotDugOut3"
@@ -843,7 +919,6 @@ func hit_crop(c: Vector2i) -> void:
 	if not muted:
 		cut_audio.pitch_scale = randf_range(0.9,1.2)
 		cut_audio.play()
-	update_ui()
 	if crops.is_empty():
 		save_stage()
 
