@@ -74,6 +74,7 @@ var wheat_total: Label
 var carrot_total: Label
 var equipment: Label
 var shop_panel: PanelContainer
+var shop_closed_for_visit := false
 var overlay: PanelContainer
 var hover: MeshInstance3D
 var aim_markers: Array[MeshInstance3D] = []
@@ -558,6 +559,10 @@ func close_shop() -> void:
 		shop_panel.free()
 		shop_panel = null
 
+func dismiss_shop() -> void:
+	shop_closed_for_visit = true
+	close_shop()
+
 func save_stage() -> void:
 	states[stage] = {"crops":crops.duplicate(true),"bridge":bridge_open}
 
@@ -576,6 +581,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 	crop_nodes.clear()
 	shop_tiles.clear()
 	shop_marker_materials.clear()
+	shop_closed_for_visit = false
 	path.clear()
 	shot_active = false
 	scythe.visible = false
@@ -903,9 +909,10 @@ func _process(dt: float) -> void:
 				if look_direction.length_squared() > 0.01:
 					bunny_model.rotation.y = lerp_angle(bunny_model.rotation.y,atan2(look_direction.x,look_direction.z) + BUNNY_ROTATION_OFFSET,dt*14)
 	if is_shop():
-		if not is_instance_valid(shop_panel): show_shop()
-	elif is_instance_valid(shop_panel):
-		close_shop()
+		if not shop_closed_for_visit and not is_instance_valid(shop_panel): show_shop()
+	else:
+		shop_closed_for_visit = false
+		if is_instance_valid(shop_panel): close_shop()
 	if transition_lock == 0 and path.is_empty() and not shot_active and not charging:
 		if cell == Vector2i(10,4):
 			next_stage()
@@ -1039,6 +1046,7 @@ func show_shop() -> void:
 	content.custom_minimum_size = Vector2(610,400)
 	shop_panel.add_child(content)
 	label_at("THE GREENHOUSE EXCHANGE",Vector2(20,14),12,MINT,content)
+	button("Close",Vector2(535,10),Vector2(60,28),dismiss_shop,content)
 	shop_upgrade_row(content,42,"Break Rock  ·  Level 1","Shatter ordinary stone",8,"c",rock_break_level >= 1,func(): buy_break_upgrade(1))
 	shop_upgrade_row(content,108,"Break Titanium  ·  Level 2","Shatter titanium stone",16,"c",rock_break_level >= 2,func(): buy_break_upgrade(2))
 	shop_upgrade_row(content,174,"Scythe Reach  ·  Level 1","+1 tile throwing distance",10,"w",reach_level >= 1,func(): buy_reach_upgrade(1))
