@@ -42,7 +42,6 @@ var view_container: SubViewportContainer
 var ui: Control
 var wheat_total: Label
 var carrot_total: Label
-var counts: Label
 var equipment: Label
 var shop_panel: PanelContainer
 var overlay: PanelContainer
@@ -118,10 +117,10 @@ func floor_tile(c: Vector2i, kind: String) -> MeshInstance3D:
 		texture_name = "lowdirtSandy.webp"
 	elif (c.x*7+c.y*3+stage)%7 == 0:
 		texture_name = "lowdirtRocky.webp"
-	var tile := box(board,grid_pos(c)-Vector3(0,0.19,0),Vector3(0.96,0.34,0.96),Color("574435"))
+	var tile := box(board,grid_pos(c)-Vector3(0,0.19,0),Vector3(0.96,0.34,0.96),Color("302b24"))
 	var surface := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(0.96,0.96)
+	plane.size = Vector2(0.86,0.86)
 	surface.mesh = plane
 	surface.material_override = floor_materials[texture_name]
 	surface.position.y = 0.176
@@ -281,7 +280,6 @@ func build_ui() -> void:
 	wheat_total = label_at("0",Vector2(1040,40),26,GOLD)
 	crop_icon("carrot",Vector2(1110,32),Vector2(48,52),ui)
 	carrot_total = label_at("0",Vector2(1174,40),26,GOLD)
-	counts = label_at("",Vector2(34,352),18,GOLD)
 	label_at("YOUR SCYTHE",Vector2(34,587),11,MUTED)
 	equipment = label_at("",Vector2(34,611),16,MINT)
 	label_at("DEEP SPACE AGRICULTURE  /  EST. 2086",Vector2(930,751),10,MUTED)
@@ -381,12 +379,6 @@ func load_stage(index: int, from_right: bool = false) -> void:
 func update_ui() -> void:
 	wheat_total.text = str(harvest.w)
 	carrot_total.text = str(harvest.c)
-	var wheat := 0
-	var carrots := 0
-	for c in crops:
-		if crops[c].kind.to_lower() == "w": wheat += 1
-		else: carrots += 1
-	counts.text = "%02d wheat  /  %02d carrots" % [wheat,carrots] if not is_shop() else ""
 	equipment.text = "Power  %d     /     Reach  %d" % [power,reach]
 	gate.material_override = material(MINT if crops.is_empty() else Color("b98860"),0.5)
 

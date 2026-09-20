@@ -35,7 +35,7 @@ The default window is 1920×1200. The game view renders at 1940×1156 with 4× M
 ## Project
 
 - `scripts/game.gd`: level layouts, gameplay, UI, shops, and smoke checks.
-- `scripts/space.gd`: full-window panorama skybox rotating at 0.5 degrees per second.
+- `scripts/space.gd`: full-window panorama skybox rotating at 0.5 degrees per second in yaw and 0.22 in pitch.
 - `scenes/main.tscn`: entry scene.
 - `assets/icons/`: the wheat and carrot icons referenced by the supplied item resources.
 - `assets/panorama_image.webp`, `Materials/SpaceSky.tres`: supplied panorama and sky material.

@@ -2,6 +2,7 @@ extends SubViewportContainer
 
 const RENDER_SCALE := 2.0
 const DRIFT_DEGREES_PER_SECOND := 0.5
+const PITCH_DEGREES_PER_SECOND := 0.22
 var sky_camera: Camera3D
 
 # Render the panorama as a sky behind the transparent orthographic game view.
@@ -29,3 +30,4 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	sky_camera.rotation.y = wrapf(sky_camera.rotation.y + deg_to_rad(DRIFT_DEGREES_PER_SECOND) * delta, 0.0, TAU)
+	sky_camera.rotation.x = wrapf(sky_camera.rotation.x + deg_to_rad(PITCH_DEGREES_PER_SECOND) * delta, 0.0, TAU)
