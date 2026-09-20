@@ -261,7 +261,7 @@ func build_ui() -> void:
 
 func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
 	var icon := TextureRect.new()
-	icon.texture = load("res://assets/icons/"+crop+".jpg")
+	icon.texture = load("res://assets/icons/"+crop+".png")
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.position = pos
@@ -578,14 +578,14 @@ func show_shop() -> void:
 	label_at("Forged moonsteel",Vector2(20,40),20,WHITE,content)
 	label_at("+1 power",Vector2(20,69),13,MUTED,content)
 	var p := button("%d   /   Upgrade" % power_cost if power<3 else "Power fully upgraded",Vector2(20,91),Vector2(306,36),func(): buy_upgrade(true),content)
-	p.icon = load("res://assets/icons/carrot.jpg")
+	p.icon = load("res://assets/icons/carrot.png")
 	p.expand_icon = true
 	p.add_theme_constant_override("icon_max_width",24)
 	p.disabled = harvest.c<power_cost or power>=3
 	label_at("Orbital tether",Vector2(359,40),20,WHITE,content)
 	label_at("+1 tile of throwing distance",Vector2(359,69),13,MUTED,content)
 	var r := button("%d   /   Upgrade" % range_cost if reach<6 else "Reach fully upgraded",Vector2(359,91),Vector2(306,36),func(): buy_upgrade(false),content)
-	r.icon = load("res://assets/icons/wheat.jpg")
+	r.icon = load("res://assets/icons/wheat.png")
 	r.expand_icon = true
 	r.add_theme_constant_override("icon_max_width",24)
 	r.disabled = harvest.w<range_cost or reach>=6
