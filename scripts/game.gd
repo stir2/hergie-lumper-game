@@ -44,11 +44,13 @@ var camera: Camera3D
 var view: SubViewport
 var view_container: SubViewportContainer
 var ui: Control
+var hud: Control
 var wheat_total: Label
 var carrot_total: Label
 var equipment: Label
 var shop_panel: PanelContainer
 var overlay: PanelContainer
+var title_menu: Control
 var hover: MeshInstance3D
 var aim_markers: Array[MeshInstance3D] = []
 var gate: MeshInstance3D
@@ -71,11 +73,16 @@ var finished := false
 var cut_audio: AudioStreamPlayer
 var throw_audio: AudioStreamPlayer
 var transition_lock := 0.0
+var title_active := false
 
 func _ready() -> void:
 	build_world()
 	build_ui()
 	load_stage(0)
+	var has_stage_argument := false
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--stage="):
+			has_stage_argument = true
 	if "--input-check" in OS.get_cmdline_user_args():
 		var checker := Node.new()
 		checker.set_script(load("res://tests/input_check.gd"))
@@ -86,6 +93,8 @@ func _ready() -> void:
 		if arg.begins_with("--stage="):
 			harvest = {"w":16,"c":16}
 			load_stage(clampi(arg.trim_prefix("--stage=").to_int(),0,7))
+	if not has_stage_argument and not "--input-check" in OS.get_cmdline_user_args() and not "--smoke" in OS.get_cmdline_user_args():
+		show_title()
 	if "--capture" in OS.get_cmdline_user_args():
 		capture_later()
 
@@ -187,7 +196,7 @@ func build_world() -> void:
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-55,-35,0)
 	sun.light_color = Color("fff0ce")
-	sun.light_energy = 1.3
+	sun.light_energy = 0.85
 	sun.shadow_enabled = true
 	world.add_child(sun)
 	camera = Camera3D.new()
@@ -286,17 +295,34 @@ func button(text: String, pos: Vector2, dimensions: Vector2, callback: Callable,
 	parent.add_child(b)
 	return b
 
+func menu_button(normal: String, hover: String, pressed: String, pos: Vector2, dimensions: Vector2, callback: Callable, parent: Node) -> TextureButton:
+	var b := TextureButton.new()
+	b.texture_normal = load(normal)
+	b.texture_hover = load(hover)
+	b.texture_pressed = load(pressed)
+	b.ignore_texture_size = true
+	b.stretch_mode = TextureButton.STRETCH_SCALE
+	b.position = pos
+	b.size = dimensions
+	b.pressed.connect(callback)
+	parent.add_child(b)
+	return b
+
 func build_ui() -> void:
 	ui = Control.new()
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(ui)
-	crop_icon("wheat",Vector2(982,32),Vector2(42,52),ui)
-	wheat_total = label_at("0",Vector2(1040,40),26,GOLD)
-	crop_icon("carrot",Vector2(1110,32),Vector2(48,52),ui)
-	carrot_total = label_at("0",Vector2(1174,40),26,GOLD)
-	label_at("YOUR SCYTHE",Vector2(34,587),11,MUTED)
-	equipment = label_at("",Vector2(34,611),16,MINT)
-	label_at("DEEP SPACE AGRICULTURE  /  EST. 2086",Vector2(930,751),10,MUTED)
+	hud = Control.new()
+	hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.add_child(hud)
+	crop_icon("wheat",Vector2(982,32),Vector2(42,52),hud)
+	wheat_total = label_at("0",Vector2(1040,40),26,GOLD,hud)
+	crop_icon("carrot",Vector2(1110,32),Vector2(48,52),hud)
+	carrot_total = label_at("0",Vector2(1174,40),26,GOLD,hud)
+	label_at("YOUR SCYTHE",Vector2(34,587),11,MUTED,hud)
+	equipment = label_at("",Vector2(34,611),16,MINT,hud)
+	label_at("DEEP SPACE AGRICULTURE  /  EST. 2086",Vector2(930,751),10,MUTED,hud)
 
 func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
 	var icon := TextureRect.new()
@@ -308,6 +334,53 @@ func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) ->
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(icon)
 	return icon
+
+func menu_image(file: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
+	var image := TextureRect.new()
+	image.texture = load(file)
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	image.position = pos
+	image.size = dimensions
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(image)
+	return image
+
+func show_title() -> void:
+	cancel_charge()
+	path.clear()
+	title_active = true
+	hud.visible = false
+	if is_instance_valid(title_menu): title_menu.queue_free()
+	title_menu = Control.new()
+	ui.add_child(title_menu)
+	title_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	title_menu.mouse_filter = Control.MOUSE_FILTER_STOP
+	var shade := ColorRect.new()
+	shade.color = Color(0.03,0.075,0.11,0.88)
+	shade.position = Vector2.ZERO
+	shade.size = Vector2(1280,800)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title_menu.add_child(shade)
+	menu_image("res://Imported/PNG/Jefferson/Menu-HergieLogoFinal.webp",Vector2(300,74),Vector2(680,306),title_menu)
+	var tagline := label_at("A SPACE-FARMING JOURNEY",Vector2(488,374),16,MINT,title_menu)
+	tagline.size = Vector2(304,28)
+	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	menu_button("res://Imported/PNG/Jefferson/Menu-Start.webp","res://Imported/PNG/Jefferson/Menu-StartHover.webp","res://Imported/PNG/Jefferson/Menu-StartClick.webp",Vector2(465,432),Vector2(350,108),begin_game,title_menu)
+	menu_button("res://Imported/PNG/Jefferson/Menu-Exit.webp","res://Imported/PNG/Jefferson/Menu-ExitHover.webp","res://Imported/PNG/Jefferson/Menu-ExitClick.webp",Vector2(465,552),Vector2(350,108),quit_game,title_menu)
+	var hint := label_at("ESC opens the garden menu during play",Vector2(420,702),13,MUTED,title_menu)
+	hint.size = Vector2(440,24)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+func begin_game() -> void:
+	title_active = false
+	hud.visible = true
+	if is_instance_valid(title_menu):
+		title_menu.queue_free()
+		title_menu = null
+
+func quit_game() -> void:
+	get_tree().quit()
 
 func grid_pos(c: Vector2i) -> Vector3:
 	return Vector3(c.x-5,0,c.y-4)
@@ -428,6 +501,7 @@ func mouse_world(screen_position: Vector2 = Vector2.INF) -> Variant:
 	return Plane(Vector3.UP,0).intersects_ray(camera.project_ray_origin(mouse),camera.project_ray_normal(mouse))
 
 func _input(event: InputEvent) -> void:
+	if title_active: return
 	if not charging: return
 	if event is InputEventMouseMotion:
 		var point = mouse_world(event.position)
@@ -448,7 +522,7 @@ func charged_distance() -> float:
 	return lerpf(MIN_THROW_DISTANCE,float(reach),clampf(charge_time/CHARGE_SECONDS,0.0,1.0))
 
 func start_charge(target: Vector3) -> void:
-	if shot_active or charging or is_shop() or finished or is_instance_valid(overlay): return
+	if title_active or shot_active or charging or is_shop() or finished or is_instance_valid(overlay): return
 	path.clear()
 	bunny.position = grid_pos(cell)
 	charging = true
@@ -465,16 +539,21 @@ func cancel_charge() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
+			if title_active:
+				quit_game()
+				return
 			if finished: return
 			if is_instance_valid(overlay): close_overlay()
 			else: show_pause()
+			return
+		if title_active: return
 		if event.keycode == KEY_R and not is_instance_valid(overlay) and not is_shop(): reset_field()
 		if event.keycode == KEY_M:
 			muted = not muted
 			AudioServer.set_bus_mute(0,muted)
 		if event.keycode == KEY_F11:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
-	if is_instance_valid(overlay) or finished: return
+	if title_active or is_instance_valid(overlay) or finished: return
 	if event is InputEventMouseButton and event.pressed:
 		var point = mouse_world(event.position)
 		if point == null: return
@@ -536,6 +615,7 @@ func hit_crop(c: Vector2i) -> void:
 
 func _process(dt: float) -> void:
 	time += dt
+	if title_active: return
 	if is_instance_valid(overlay): return
 	transition_lock = maxf(0,transition_lock-dt)
 	if charging:
@@ -697,8 +777,9 @@ func close_overlay() -> void:
 		overlay = null
 
 func show_pause() -> void:
-	var content := modal("A moment among the stars","Paused")
-	button("Back to the garden",Vector2(30,282),Vector2(490,40),close_overlay,content)
+	var content := modal("Garden menu","The garden is paused.")
+	button("Resume farming",Vector2(30,232),Vector2(490,40),close_overlay,content)
+	button("Restart journey",Vector2(30,282),Vector2(490,40),restart,content)
 
 func show_ending() -> void:
 	var content := modal("A universe in bloom.","Every field harvested. Every little root brought home.\n\nYou gathered %d crops across six space gardens.\nYour scythe: power %d · reach %d.\n\nThanks for tending this corner of the universe." % [total_harvest,power,reach])

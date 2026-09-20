@@ -3,6 +3,7 @@ extends SubViewportContainer
 const RENDER_SCALE := 2.0
 const DRIFT_DEGREES_PER_SECOND := 0.5
 const PITCH_DEGREES_PER_SECOND := 0.22
+const SKY_BRIGHTNESS := 1.45
 var sky_camera: Camera3D
 
 # Render the panorama as a sky behind the transparent orthographic game view.
@@ -21,6 +22,7 @@ func _ready() -> void:
 	environment.environment = Environment.new()
 	environment.environment.background_mode = Environment.BG_SKY
 	environment.environment.sky = load("res://Materials/SpaceSky.tres")
+	environment.environment.background_energy_multiplier = SKY_BRIGHTNESS
 	sky_view.add_child(environment)
 	sky_camera = Camera3D.new()
 	sky_camera.fov = 100.0
