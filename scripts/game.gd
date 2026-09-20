@@ -37,6 +37,8 @@ var path: Array[Vector2i] = []
 var cell := Vector2i(0,4)
 var world: Node3D
 var board: Node3D
+var background_ruins: Node3D
+var floating_ruins: Array[Node3D] = []
 var bunny: Node3D
 var bunny_model: Node3D
 var hand_anchor: Node3D
@@ -171,14 +173,14 @@ func build_world() -> void:
 	bg.set_script(load("res://scripts/space.gd"))
 	add_child(bg)
 	view_container = SubViewportContainer.new()
-	view_container.position = Vector2(280,126)
-	view_container.size = Vector2(970,578) * RENDER_SCALE
+	view_container.position = Vector2.ZERO
+	view_container.size = Vector2(1280,800) * RENDER_SCALE
 	view_container.scale = Vector2.ONE / RENDER_SCALE
 	view_container.stretch = false
 	view_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(view_container)
 	view = SubViewport.new()
-	view.size = Vector2i(Vector2(970,578) * RENDER_SCALE)
+	view.size = Vector2i(Vector2(1280,800) * RENDER_SCALE)
 	view.transparent_bg = true
 	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	view.msaa_3d = Viewport.MSAA_4X
@@ -202,11 +204,12 @@ func build_world() -> void:
 	camera = Camera3D.new()
 	world.add_child(camera)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 10.5
+	camera.size = 9.6
 	camera.position = Vector3(11,15,16)
 	camera.look_at(Vector3(0,0,0))
 	board = Node3D.new()
 	world.add_child(board)
+	build_background_ruins()
 	bunny = Node3D.new()
 	world.add_child(bunny)
 	bunny_model = Node3D.new()
@@ -260,6 +263,58 @@ func make_scythe(pivot_at_handle: bool = false) -> Node3D:
 	for child in model.find_children("*", "MeshInstance3D"):
 		child.material_override = material(Color("b9dfd0"),0.1)
 	return root
+
+func floating_ruin(file: String, pos: Vector3, target_size: float, orientation: Vector3, spin: Vector3, drift: Vector3, phase: float) -> void:
+	var pivot := Node3D.new()
+	background_ruins.add_child(pivot)
+	pivot.position = pos
+	pivot.rotation_degrees = orientation
+	pivot.set_meta("base_position",pos)
+	pivot.set_meta("spin",spin)
+	pivot.set_meta("drift",drift)
+	pivot.set_meta("phase",phase)
+	asset(pivot,file,Vector3.ZERO,target_size)
+	floating_ruins.append(pivot)
+
+func build_background_ruins() -> void:
+	background_ruins = Node3D.new()
+	world.add_child(background_ruins)
+	# Large nearby wrecks frame the farm; smaller silhouettes recede into the sky.
+	floating_ruin("res://Meshes/Kevin/ConcreteBuilding1.tres",Vector3(-7.4,-1.0,-5.2),1.80,Vector3(11,-23,17),Vector3(0.05,0.12,-0.04),Vector3(0.45,0.20,-0.25),0.2)
+	floating_ruin("res://Meshes/Kevin/BrickBuilding3.tres",Vector3(7.5,-1.6,-5.8),1.65,Vector3(-14,28,-10),Vector3(-0.04,-0.10,0.06),Vector3(-0.35,0.16,0.32),1.1)
+	floating_ruin("res://Meshes/Kevin/ConcreteBuilding2.tres",Vector3(-2.0,-2.2,-8.8),1.05,Vector3(34,-12,23),Vector3(0.06,0.08,0.03),Vector3(0.18,-0.24,0.42),2.4)
+	floating_ruin("res://Meshes/Kevin/BrickBuilding2.tres",Vector3(8.9,-2.4,-2.6),1.15,Vector3(-28,42,16),Vector3(-0.05,0.07,-0.04),Vector3(-0.40,0.23,-0.15),3.0)
+	floating_ruin("res://Meshes/Kevin/ConcretePillar3.tres",Vector3(-8.8,-2.0,0.5),0.90,Vector3(66,18,-35),Vector3(0.09,-0.05,0.07),Vector3(0.26,0.31,0.12),3.8)
+	floating_ruin("res://Meshes/Kevin/Railing1.tres",Vector3(7.8,-2.7,1.8),0.82,Vector3(31,-38,42),Vector3(-0.07,0.08,0.05),Vector3(-0.18,-0.20,0.36),4.6)
+	floating_ruin("res://Meshes/Jefferson/ConcreteDebris.tres",Vector3(-5.6,-2.6,-7.4),0.78,Vector3(43,9,61),Vector3(0.10,0.06,-0.08),Vector3(0.35,-0.18,0.20),5.1)
+	floating_ruin("res://Meshes/Jefferson/Debris2.tres",Vector3(4.6,-2.9,-8.0),0.62,Vector3(-22,48,31),Vector3(-0.08,0.11,0.04),Vector3(-0.28,0.25,-0.30),0.8)
+	floating_ruin("res://Meshes/Jefferson/RockTitanium2.tres",Vector3(-9.5,-2.8,-3.4),0.72,Vector3(17,-31,29),Vector3(0.04,0.09,0.07),Vector3(0.20,0.12,-0.38),1.7)
+	floating_ruin("res://Meshes/Jefferson/RockPlain3.tres",Vector3(10.2,-3.1,-4.4),0.54,Vector3(-31,24,-44),Vector3(-0.06,0.05,-0.09),Vector3(-0.32,-0.16,0.18),2.8)
+	floating_ruin("res://Meshes/Kevin/ConcretePillar2.tres",Vector3(-10.4,-3.0,-6.9),0.92,Vector3(29,54,-17),Vector3(0.08,-0.06,0.10),Vector3(0.22,0.28,0.35),4.0)
+	floating_ruin("res://Meshes/Kevin/BrickBuilding1.tres",Vector3(9.6,-3.2,-8.4),0.76,Vector3(-41,13,38),Vector3(-0.09,0.07,-0.06),Vector3(-0.38,0.17,-0.22),5.5)
+	floating_ruin("res://Meshes/Kevin/ConcretePillar1.tres",Vector3(-6.8,-3.4,2.8),0.58,Vector3(73,-24,19),Vector3(0.11,0.04,-0.07),Vector3(0.16,-0.26,0.27),1.5)
+	floating_ruin("res://Meshes/Kevin/BrickPillar1.tres",Vector3(10.8,-3.5,0.2),0.62,Vector3(-19,47,56),Vector3(-0.05,0.10,0.08),Vector3(-0.24,0.21,0.14),2.1)
+	floating_ruin("res://Meshes/Jefferson/RockTitanium1.tres",Vector3(-3.8,-3.6,-10.6),0.50,Vector3(34,-48,-22),Vector3(0.07,-0.08,0.09),Vector3(0.30,0.14,-0.18),3.3)
+	floating_ruin("res://Meshes/Jefferson/RockPlain2.tres",Vector3(5.5,-3.8,-10.2),0.42,Vector3(-62,21,44),Vector3(-0.10,0.05,-0.04),Vector3(-0.16,0.29,0.24),4.9)
+	# Lower, farther pieces keep the void around the near edge from feeling empty.
+	floating_ruin("res://Meshes/Kevin/ConcreteBuilding1.tres",Vector3(-10.8,-5.0,-3.4),1.08,Vector3(48,-37,29),Vector3(0.06,0.09,-0.05),Vector3(0.31,0.22,0.18),0.6)
+	floating_ruin("res://Meshes/Kevin/BrickBuilding1.tres",Vector3(-6.8,-6.0,-3.0),0.84,Vector3(-33,26,51),Vector3(-0.08,0.04,0.10),Vector3(-0.26,0.30,-0.16),1.9)
+	floating_ruin("res://Meshes/Kevin/ConcretePillar2.tres",Vector3(-9.8,-5.7,-0.3),0.62,Vector3(71,12,-39),Vector3(0.10,-0.07,0.06),Vector3(0.22,-0.18,0.29),2.7)
+	floating_ruin("res://Meshes/Jefferson/Debris2.tres",Vector3(-5.1,-6.5,-6.5),0.72,Vector3(24,58,-36),Vector3(-0.06,0.11,-0.08),Vector3(-0.34,0.24,0.20),3.6)
+	floating_ruin("res://Meshes/Jefferson/ConcreteDebris.tres",Vector3(-11.8,-5.8,1.8),0.56,Vector3(-47,19,63),Vector3(0.09,0.05,0.07),Vector3(0.17,0.27,-0.25),4.4)
+	floating_ruin("res://Meshes/Jefferson/RockTitanium1.tres",Vector3(-7.2,-5.5,2.4),0.48,Vector3(39,-52,18),Vector3(-0.07,0.08,-0.09),Vector3(-0.21,0.16,0.33),5.2)
+	floating_ruin("res://Meshes/Jefferson/RockPlain3.tres",Vector3(-2.4,-7.0,-8.3),0.52,Vector3(-56,34,27),Vector3(0.08,-0.06,0.05),Vector3(0.29,0.20,-0.17),1.3)
+	floating_ruin("res://Meshes/Kevin/Railing1.tres",Vector3(2.8,-6.2,-8.6),0.50,Vector3(62,-29,45),Vector3(-0.10,0.07,0.04),Vector3(-0.18,0.32,0.21),2.4)
+
+func update_background_ruins(dt: float) -> void:
+	for ruin in floating_ruins:
+		if not is_instance_valid(ruin): continue
+		var spin: Vector3 = ruin.get_meta("spin")
+		var base_position: Vector3 = ruin.get_meta("base_position")
+		var drift: Vector3 = ruin.get_meta("drift")
+		var phase: float = ruin.get_meta("phase")
+		ruin.rotation += spin*dt
+		ruin.position = base_position+drift*sin(time*0.42+phase)
 
 func panel(pos: Vector2, dimensions: Vector2, parent: Node = ui) -> PanelContainer:
 	var p := PanelContainer.new()
@@ -623,6 +678,7 @@ func hit_crop(c: Vector2i) -> void:
 
 func _process(dt: float) -> void:
 	time += dt
+	update_background_ruins(dt)
 	if title_active: return
 	if is_instance_valid(overlay): return
 	transition_lock = maxf(0,transition_lock-dt)
