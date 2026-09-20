@@ -45,6 +45,7 @@ func run() -> void:
 	await click_tile(Vector2i(3,2),MOUSE_BUTTON_RIGHT)
 	await get_tree().create_timer(1.2).timeout
 	check(game.crops.size()<16 and not game.shot_active,"Right mouse input harvests and returns scythe")
+	check(game.harvest.w == 16-game.crops.size() and game.harvest.c == 0,"Wheat harvest updates its separate inventory count")
 	await click_tile(Vector2i(10,4))
 	await get_tree().create_timer(1.6).timeout
 	check(game.stage == 0,"Unharvested field blocks exit")
@@ -58,16 +59,16 @@ func run() -> void:
 	await click_tile(Vector2i(0,4))
 	await get_tree().create_timer(0.8).timeout
 	check(game.stage == 0 and game.crops.is_empty(),"West edge returns to persisted field")
-	game.credits = 80
+	game.harvest = {"w":16,"c":16}
 	game.load_stage(2)
 	await get_tree().create_timer(0.3).timeout
 	await screenshot("screenshot-greenhouse.png")
 	await click(Vector2(550,627),MOUSE_BUTTON_LEFT)
 	await get_tree().create_timer(0.2).timeout
-	check(game.power == 2 and game.credits == 56,"Greenhouse button spends credits and upgrades power")
+	check(game.power == 2 and game.harvest.c == 8 and game.harvest.w == 16,"Power upgrade spends only carrots")
 	await click(Vector2(900,627),MOUSE_BUTTON_LEFT)
 	await get_tree().create_timer(0.2).timeout
-	check(game.reach == 4 and game.credits == 36,"Greenhouse button upgrades throwing range")
+	check(game.reach == 4 and game.harvest.w == 6 and game.harvest.c == 8,"Range upgrade spends only wheat")
 	await click_tile(Vector2i(10,4))
 	await get_tree().create_timer(2.5).timeout
 	check(game.stage == 3,"Greenhouse gate remains clickable below shop UI")
@@ -82,7 +83,7 @@ func run() -> void:
 	await get_tree().create_timer(2.5).timeout
 	check(game.finished and is_instance_valid(game.overlay),"Final exit shows completion screen")
 	game.restart()
-	check(game.stage == 0 and game.credits == 0 and game.power == 1 and game.reach == 3,"Replay resets run")
+	check(game.stage == 0 and game.harvest.w == 0 and game.harvest.c == 0 and game.power == 1 and game.reach == 3,"Replay resets run")
 	await screenshot("screenshot.png")
 	print("INPUT INTEGRATION "+("FAILED" if failed else "PASSED"))
 	get_tree().quit(1 if failed else 0)

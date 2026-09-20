@@ -11,12 +11,12 @@ Open `project.godot` in Godot 4.3 or newer (verified in Godot 4.7.2), then press
 - Harvest **every wheat and carrot** to open the eastern edge tile marked with an arrow. Walk onto it to enter the next screen. The western middle edge goes back.
 - Rocks block both movement and throws. Scythes fly across gaps. Crops block walking until harvested.
 - Step on a **gold switch** to open a bridge.
-- Wheat earns **2 credits**, carrots **3 credits**. Greenhouses sell **power** (up to 3) and **range** (up to 6 tiles).
+- Each crop adds **1** to its separate icon counter. Greenhouses trade **carrots for power** (8 × current power; up to 3) and **wheat for range** (10 × (current range − 2); up to 6 tiles).
 - Amber wheat takes 2 power; reinforced carrots take 3. Repeated throws work with the starter blade, so upgrades are helpful but never required.
 - **R:** reset the current unsaved field, reversing its harvest rewards. Saved fields keep their collected crops.
-- **Esc:** pause. **M:** mute. **F11:** fullscreen. **?:** field guide.
+- **Esc:** pause. **M:** mute. **F11:** fullscreen.
 
-Six harvest puzzles and two greenhouse waystations form an eight-screen journey with a completion screen and replay. Harvest, bridge state, upgrades, and credits persist across screen changes **for the current session**; closing the game starts a new run.
+Six harvest puzzles and two greenhouse waystations form an eight-screen journey with a completion screen and replay. Harvest, bridge state, upgrades, and crop inventories persist across screen changes **for the current session**; closing the game starts a new run.
 
 ## Checks
 
@@ -33,8 +33,10 @@ The smoke check exercises movement/path blocking, a real scythe flight and retur
 ## Project
 
 - `scripts/game.gd`: level layouts, gameplay, UI, shops, and smoke checks.
-- `scripts/space.gd`: animated starfield and orbital backdrop.
+- `scripts/space.gd`: full-window panorama skybox.
 - `scenes/main.tscn`: entry scene.
+- `assets/icons/`: the wheat and carrot icons referenced by the supplied item resources.
+- `assets/panorama_image.webp`, `Materials/SpaceSky.tres`: supplied panorama and sky material.
 - `Meshes/`, `Materials/`, `Atlases/`, `Imported/`, `Sounds/`: supplied assets.
 
 No plugins, downloads, or external services required.
