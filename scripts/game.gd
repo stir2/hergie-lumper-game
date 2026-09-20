@@ -220,14 +220,18 @@ func build_world() -> void:
 	# to fine-tune the grip position for BunnyFarmer.tres.
 	hand_anchor.position = Vector3(.30,0.2,0.30)
 	hand_anchor.rotation_degrees = Vector3(0,0,180)
-	held = make_scythe()
+	held = make_scythe(true)
 	hand_anchor.add_child(held)
 	held.position = Vector3.ZERO
 	held.scale = Vector3.ONE*0.8
 	scythe = make_scythe()
 	world.add_child(scythe)
 	scythe.visible = false
-	hover = box(world,Vector3.ZERO,Vector3(0.94,0.025,0.94),MINT)
+	hover = box(world,Vector3.ZERO,Vector3(0.82,0.025,0.82),MINT)
+	var hover_material := hover.material_override as StandardMaterial3D
+	hover_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	hover_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	hover_material.albedo_color = Color(0.65,0.90,0.78,0.5)
 	hover.visible = false
 	for i in 18:
 		var dot := box(world,Vector3.ZERO,Vector3(0.055,0.045,0.055),GOLD,0.6)
@@ -242,13 +246,17 @@ func build_world() -> void:
 	throw_audio.volume_db = -24
 	add_child(throw_audio)
 
-func make_scythe() -> Node3D:
+func make_scythe(pivot_at_handle: bool = false) -> Node3D:
 	var root := Node3D.new()
 	var packed: PackedScene = load("res://Imported/GLB/Jefferson/scythe.glb")
 	var model := packed.instantiate() as Node3D
 	root.add_child(model)
 	model.scale = Vector3.ONE*0.75
 	model.rotation_degrees = Vector3(0,0,90)
+	# After the visual rotation, the lower handle end lies along local +X.
+	# Offset the held mesh so its handle, rather than its imported center, is the pivot.
+	if pivot_at_handle:
+		model.position.x = -0.20
 	for child in model.find_children("*", "MeshInstance3D"):
 		child.material_override = material(Color("b9dfd0"),0.1)
 	return root
@@ -534,7 +542,7 @@ func cancel_charge() -> void:
 	charging = false
 	charge_time = 0.0
 	for dot in aim_markers: dot.visible = false
-	if is_instance_valid(held): held.rotation.z = 0.0
+	if is_instance_valid(held): held.rotation.y = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -620,7 +628,7 @@ func _process(dt: float) -> void:
 	transition_lock = maxf(0,transition_lock-dt)
 	if charging:
 		charge_time = minf(CHARGE_SECONDS,charge_time+dt)
-		held.rotation.z = -0.55*(charge_time/CHARGE_SECONDS)
+		held.rotation.y = PI*0.5*(charge_time/CHARGE_SECONDS)
 	if not path.is_empty():
 		var target := grid_pos(path[0])
 		var delta := target-bunny.position
@@ -634,6 +642,13 @@ func _process(dt: float) -> void:
 	else:
 		bunny_model.position.y = sin(time*2)*0.018
 		bunny_model.rotation.z = 0
+		if not shot_active and not charging:
+			var mouse_target = mouse_world()
+			if mouse_target != null:
+				var look_direction: Vector3 = mouse_target-bunny.position
+				look_direction.y = 0
+				if look_direction.length_squared() > 0.01:
+					bunny_model.rotation.y = lerp_angle(bunny_model.rotation.y,atan2(look_direction.x,look_direction.z) + BUNNY_ROTATION_OFFSET,dt*14)
 	if transition_lock == 0 and path.is_empty() and not shot_active and not charging:
 		if cell == Vector2i(10,4) and crops.is_empty():
 			next_stage()
@@ -673,7 +688,7 @@ func update_aim() -> void:
 	hover.visible = false
 	if is_shop() or is_instance_valid(overlay): return
 	var point = mouse_world()
-	if point != null:
+	if point != null and not charging:
 		var c := Vector2i(roundi(point.x)+5,roundi(point.z)+4)
 		if tiles.has(c):
 			hover.visible = true
