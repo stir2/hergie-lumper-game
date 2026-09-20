@@ -1,5 +1,7 @@
 extends Node
 
+@export var instruction_font: Font = preload("res://assets/fonts/Futurot.ttf")
+
 const RENDER_SCALE := 2.0
 const CHARGE_SECONDS := 0.9
 const MIN_THROW_DISTANCE := 1.0
@@ -84,6 +86,7 @@ var back_buffer_copy: BackBufferCopy
 var post_process: ColorRect
 var ui: Control
 var hud: Control
+var first_level_instructions: Control
 var title_menu: Control
 var title_active := false
 var wheat_total: Label
@@ -447,6 +450,18 @@ func build_ui() -> void:
 	titanium_icon.visible = false
 	titanium_total.visible = false
 
+	first_level_instructions = Control.new()
+	first_level_instructions.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(first_level_instructions)
+	instruction_label("Left click a tile to move",Vector2(32,32))
+	instruction_label("Hold & release right click to throw",Vector2(32,66))
+
+func instruction_label(text: String, pos: Vector2) -> Label:
+	var instruction := label_at(text,pos,18,WHITE,first_level_instructions)
+	if instruction_font:
+		instruction.add_theme_font_override("font",instruction_font)
+	return instruction
+
 func crop_icon(crop: String, pos: Vector2, dimensions: Vector2, parent: Node) -> TextureRect:
 	var icon := TextureRect.new()
 	icon.texture = load("res://assets/icons/"+crop+".png")
@@ -752,6 +767,7 @@ func load_stage(index: int, from_right: bool = false) -> void:
 		for x in range(4,7):
 			for z in range(1,4):
 				scenery_blockers[Vector2i(x,z)] = true
+	first_level_instructions.visible = stage == 0
 	update_ui()
 
 func update_ui() -> void:
